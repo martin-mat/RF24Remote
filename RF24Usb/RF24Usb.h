@@ -67,7 +67,8 @@ typedef enum
     RF24_setCRCLength,
     RF24_getCRCLength,
     RF24_disableCRC,
-    RF24_failureDetected,
+    RF24_getFailureDetected,
+    RF24_setFailureDetected,
 } ERF24Command;
 
 
