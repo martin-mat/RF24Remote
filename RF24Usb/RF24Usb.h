@@ -21,7 +21,7 @@ typedef enum
     RF24_available,
     RF24_available_pipe,
     RF24_read,
-    RF24_write,
+    RF24_write, /* blocking  */
     RF24_writeMulticast,
     RF24_openWritingPipe,
     RF24_openWritingPipe40,
@@ -31,11 +31,11 @@ typedef enum
     RF24_rxFifoFull,
     RF24_powerDown,
     RF24_powerUp,
-    RF24_writeFast,
-    RF24_writeFastMulticast,
-    RF24_writeBlocking,
-    RF24_txStandBy,
-    RF24_txStandByTimeout,
+    RF24_writeFast, /* blocking */
+    RF24_writeFastMulticast, /* blocking */
+    RF24_writeBlocking, /* blocking */
+    RF24_txStandBy, /* blocking */
+    RF24_txStandByTimeout, /* blocking */
     RF24_writeAckPayload,
     RF24_enableDynamicAck,
     RF24_isAckPayloadAvailable,

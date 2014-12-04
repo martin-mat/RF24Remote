@@ -832,6 +832,11 @@ public:
    */
   void openWritingPipe(uint64_t address);
 
+protected:
+  bool waitForFIFO(bool reuse, int8_t timeout = 0, void (*poll)(void)=NULL);
+  bool waitForTransfer(void (*poll)(void)=NULL);
+  bool txStandByPoll(uint32_t timeout=0, void (*poll)(void)=NULL);
+
 private:
 
   /**

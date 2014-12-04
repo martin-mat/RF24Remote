@@ -349,6 +349,100 @@ uint8_t RF24::read_payload(void* buf, uint8_t data_len)
 }
 
 /****************************************************************************/
+bool RF24::waitForFIFO(bool reuse, int8_t timeout, void (*poll)(void))
+{
+    uint32_t timer = millis();                            //Get the time that the payload transmission started
+
+    while( ( get_status()  & ( _BV(TX_FULL) ))) {         //Blocking only if FIFO is full. This will loop and block until TX is successful or timeout
+
+        if( get_status() & _BV(MAX_RT)){                      //If MAX Retries have been reached
+            if (reuse) {
+                reUseTX();                                       //Set re-transmit and clear the MAX_RT interrupt flag
+            } else
+                write_register(STATUS,_BV(MAX_RT) );
+            if (timeout) {
+                if(millis() - timer > timeout) {
+                    return 0;        //If this payload has exceeded the user-defined timeout, exit and return 0
+                }
+            } else
+                return 0;
+        };
+        #if defined (FAILURE_HANDLING)
+            if(millis() - timer > (timeout+75) ){
+                errNotify();
+                return 0;
+            };
+        #endif
+        if (poll)
+            poll();
+    }
+    return 1;
+}
+
+/****************************************************************************/
+bool RF24::waitForTransfer(void (*poll)(void))
+{
+	#if defined (FAILURE_HANDLING)
+		uint32_t timer = millis();
+	#endif 
+
+	while( ! ( get_status()  & ( _BV(TX_DS) | _BV(MAX_RT) ))) { 
+		#if defined (FAILURE_HANDLING)
+			if(millis() - timer > 75){			
+				errNotify();
+				return 0;							
+			}
+		#endif
+        if (poll)
+            poll();
+	}
+    
+	ce(LOW);
+
+	uint8_t status = write_register(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
+
+    //Max retries exceeded
+    if( status & _BV(MAX_RT)){
+        flush_tx(); //Only going to be 1 packet int the FIFO at a time using this method, so just flush
+        return 0;
+    }
+    //TX OK 1 or 0
+    return 1;
+}
+
+bool RF24::txStandByPoll(uint32_t timeout, void (*poll)(void))
+{
+        uint32_t start = millis();
+
+        while( ! (read_register(FIFO_STATUS) & _BV(TX_EMPTY)) ){
+                if( get_status() & _BV(MAX_RT)){
+                        write_register(STATUS,_BV(MAX_RT) );
+                                ce(LOW);     //Set re-transmit
+                                if (timeout) {
+                                    ce(HIGH);
+                                    if(millis() - start >= timeout) {
+                                        ce(LOW); flush_tx(); return 0;
+                                    }
+                                } else {
+                                    flush_tx(); return 0;
+                                }
+                }
+                #if defined (FAILURE_HANDLING)
+                        if( millis() - start > (timeout+75)){
+                                errNotify();
+                                return 0;       
+                        }
+                #endif
+                if (poll)
+                    poll();
+        }
+        
+        ce(LOW);                                   //Set STANDBY-I mode
+        return 1;
+
+}
+
+/****************************************************************************/
 
 uint8_t RF24::flush_rx(void)
 {
@@ -819,31 +913,7 @@ bool RF24::write( const void* buf, uint8_t len, const bool multicast )
 	//Start Writing
 	startFastWrite(buf,len,multicast);
 
-	//Wait until complete or failed
-	#if defined (FAILURE_HANDLING)
-		uint32_t timer = millis();
-	#endif 
-	
-	while( ! ( get_status()  & ( _BV(TX_DS) | _BV(MAX_RT) ))) { 
-		#if defined (FAILURE_HANDLING)
-			if(millis() - timer > 75){			
-				errNotify();
-				return 0;							
-			}
-		#endif
-	}
-    
-	ce(LOW);
-
-	uint8_t status = write_register(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
-
-  //Max retries exceeded
-  if( status & _BV(MAX_RT)){
-  	flush_tx(); //Only going to be 1 packet int the FIFO at a time using this method, so just flush
-  	return 0;
-  }
-	//TX OK 1 or 0
-  return 1;
+    return waitForTransfer();
 }
 
 bool RF24::write( const void* buf, uint8_t len ){
@@ -859,22 +929,9 @@ bool RF24::writeBlocking( const void* buf, uint8_t len, uint32_t timeout )
 	//This way the FIFO will fill up and allow blocking until packets go through
 	//The radio will auto-clear everything in the FIFO as long as CE remains high
 
-	uint32_t timer = millis();							  //Get the time that the payload transmission started
-
-	while( ( get_status()  & ( _BV(TX_FULL) ))) {		  //Blocking only if FIFO is full. This will loop and block until TX is successful or timeout
-
-		if( get_status() & _BV(MAX_RT)){					  //If MAX Retries have been reached
-			reUseTX();										  //Set re-transmit and clear the MAX_RT interrupt flag
-			if(millis() - timer > timeout){ return 0; }		  //If this payload has exceeded the user-defined timeout, exit and return 0
-		}
-		#if defined (FAILURE_HANDLING)
-			if(millis() - timer > (timeout+75) ){			
-				errNotify();
-				return 0;							
-			}
-		#endif
-
-  	}
+    // wait for FIFO
+    if (!waitForFIFO(true, timeout))
+        return 0;
 
   	//Start Writing
 	startFastWrite(buf,len,0);								  //Write the payload if a buffer is clear
@@ -900,26 +957,11 @@ bool RF24::writeFast( const void* buf, uint8_t len, const bool multicast )
 	//Return 0 so the user can control the retrys and set a timer or failure counter if required
 	//The radio will auto-clear everything in the FIFO as long as CE remains high
 
-	#if defined (FAILURE_HANDLING)
-		uint32_t timer = millis();
-	#endif
-	
-	while( ( get_status()  & ( _BV(TX_FULL) ))) {			  //Blocking only if FIFO is full. This will loop and block until TX is successful or fail
+    // wait for fifo
+    if (!waitForFIFO(false))
+        return 0;
 
-		if( get_status() & _BV(MAX_RT)){
-			//reUseTX();										  //Set re-transmit
-			write_register(STATUS,_BV(MAX_RT) );			  //Clear max retry flag
-			return 0;										  //Return 0. The previous payload has been retransmitted
-															  //From the user perspective, if you get a 0, just keep trying to send the same payload
-		}
-		#if defined (FAILURE_HANDLING)
-			if(millis() - timer > 75 ){			
-				errNotify();
-				return 0;							
-			}
-		#endif
-  	}
-		     //Start Writing
+    //Start Writing
 	startFastWrite(buf,len,multicast);
 
 	return 1;
@@ -971,55 +1013,13 @@ bool RF24::rxFifoFull(){
 /****************************************************************************/
 
 bool RF24::txStandBy(){
-    #if defined (FAILURE_HANDLING)
-		uint32_t timeout = millis();
-	#endif
-	while( ! (read_register(FIFO_STATUS) & _BV(TX_EMPTY)) ){
-		if( get_status() & _BV(MAX_RT)){
-			write_register(STATUS,_BV(MAX_RT) );
-			ce(LOW);
-			flush_tx();    //Non blocking, flush the data
-			return 0;
-		}
-		#if defined (FAILURE_HANDLING)
-			if( millis() - timeout > 75){
-				errNotify();
-				return 0;	
-			}
-		#endif
-	}
-
-	ce(LOW);			   //Set STANDBY-I mode
-	return 1;
+    return txStandByPoll();
 }
 
 /****************************************************************************/
 
 bool RF24::txStandBy(uint32_t timeout){
-
-	uint32_t start = millis();
-
-	while( ! (read_register(FIFO_STATUS) & _BV(TX_EMPTY)) ){
-		if( get_status() & _BV(MAX_RT)){
-			write_register(STATUS,_BV(MAX_RT) );
-				ce(LOW);										  //Set re-transmit
-				ce(HIGH);
-				if(millis() - start >= timeout){
-					ce(LOW); flush_tx(); return 0;
-				}
-		}
-		#if defined (FAILURE_HANDLING)
-			if( millis() - start > (timeout+75)){
-				errNotify();
-				return 0;	
-			}
-		#endif
-	}
-
-	
-	ce(LOW);				   //Set STANDBY-I mode
-	return 1;
-
+    return txStandByPoll(timeout);
 }
 /****************************************************************************/
 
