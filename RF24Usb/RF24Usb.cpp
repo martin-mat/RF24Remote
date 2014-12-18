@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <usb.h>
 #include "RF24Usb.h"
+#define USB_TIMEOUT 500
 
 PROGMEM ERF24ParamType RF24Commands[][2][MAX_PARAMS]=
 {
@@ -71,7 +72,7 @@ int RF24Usb::executeCommand(void)
         case RF24_stopListening: RF24::stopListening(); break;
         case RF24_available: p_bool[OPAR][0] = RF24::available(); break;
         case RF24_availablePipe: p_bool[OPAR][0] = RF24::available(&p_uint8[OPAR][0]); break;
-        case RF24_read: RF24::read(out_buf, p_uint8[IPAR][0]); p_buf_ln[OPAR]=p_uint8[IPAR][0]>RF24::getPayloadSize()?RF24::getPayloadSize():p_uint8[IPAR][0]; break;
+        case RF24_read: RF24::read(p_buf[OPAR], p_uint8[IPAR][0]); p_buf_ln[OPAR]=p_uint8[IPAR][0]>RF24::getPayloadSize()?RF24::getPayloadSize():p_uint8[IPAR][0]; break;
         case RF24_write: p_bool[OPAR][0] = RF24::write(p_buf[IPAR], p_uint8[IPAR][0]); break;
         case RF24_writeMulticast: p_bool[OPAR][0] = RF24::write(p_buf[IPAR], p_uint8[IPAR][0], p_bool[IPAR][0]); break;
         case RF24_openWritingPipe: RF24::openWritingPipe((uint8_t *)p_buf[IPAR]); break;
@@ -156,7 +157,7 @@ int RF24Usb::parse(int paramtype, const char *p)
     }
 }
 
-int RF24Usb::store(int paramtype, char *p)
+int RF24Usb::store(int paramtype, char *p, uint8_t &ln)
 {
     uint8_t param_cnt_bool = 0;
     uint8_t param_cnt_uint8 = 0;
@@ -164,8 +165,10 @@ int RF24Usb::store(int paramtype, char *p)
     uint8_t param_cnt_uint32 = 0;
     uint8_t param_cnt_uint64 = 0;
     uint8_t cnt=0;
+    char *start = p;
 
     printf("Command:%d\n", command);
+    
     *(ERF24Command *)p = command; p++;
     while ((*p = RF24Commands[command][paramtype][cnt]) != RF24_none)
     {
@@ -183,6 +186,7 @@ int RF24Usb::store(int paramtype, char *p)
                 break;
         }
     }
+    ln = p - start;
 }
 
 /*********************************************************************
@@ -196,11 +200,17 @@ RF24::RF24(uint8_t _cepin, uint8_t _cspin)
 
 void RF24Usb::callUsb(ERF24Command cmd)
 {
+    uint8_t ln;
     usb_dev_handle *handle = NULL;
     const unsigned char rawVid[2] = {USB_CFG_VENDOR_ID}, rawPid[2] = {USB_CFG_DEVICE_ID};
     char vendor[] = {USB_CFG_VENDOR_NAME, 0}, product[] = {USB_CFG_DEVICE_NAME, 0};
-    char buffer[4];
+    char buffer[256];
+    char buf_to_send;
     int cnt, vid, pid, isOn;
+    int ret;
+
+    uint16_t lValue;
+    uint16_t lIndex;
 
     usb_init();
 
@@ -214,7 +224,25 @@ void RF24Usb::callUsb(ERF24Command cmd)
     }
 
     command = cmd;
-    store(IPAR, to_send);
+    store(IPAR, buffer, ln);
+
+    lValue = to_send[1] + to_send[2]>>8;
+    lIndex = to_send[3] + to_send[4]>>8;
+    if (ln>5)   /* short input data, handle everything in one shot */
+    {
+        buf_to_send = 0;
+        ln = 0;
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, command, lValue, lIndex, buffer, ln, USB_TIMEOUT);
+    } else {
+        buf_to_send = buffer + 5;
+        ln -= 5;
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, command, lValue, lIndex, buffer, ln, USB_TIMEOUT);
+    }
+
+    if (ret<0)
+        fprintf(stderr, "usb_controll sending usb data failed");
+
+    parse(OPAR, buffer);
 }
 
 /*
