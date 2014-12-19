@@ -1,6 +1,8 @@
 #include <stdio.h>
 #ifdef _USB_FRONTEND
     #include <usb.h>
+    #include "usbconfig.h"
+    #include "opendevice.h"
 #endif
 #include "RF24Usb.h"
 #define USB_TIMEOUT 500
@@ -207,7 +209,7 @@ void RF24Usb::callUsb(ERF24Command cmd)
     const unsigned char rawVid[2] = {USB_CFG_VENDOR_ID}, rawPid[2] = {USB_CFG_DEVICE_ID};
     char vendor[] = {USB_CFG_VENDOR_NAME, 0}, product[] = {USB_CFG_DEVICE_NAME, 0};
     char buffer[256];
-    char buf_to_send;
+    char *buf_to_send;
     int cnt, vid, pid, isOn;
     int ret;
 
@@ -232,13 +234,12 @@ void RF24Usb::callUsb(ERF24Command cmd)
     lIndex = to_send[3] + to_send[4]>>8;
     if (ln>5)   /* short input data, handle everything in one shot */
     {
-        buf_to_send = 0;
         ln = 0;
         ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, command, lValue, lIndex, buffer, ln, USB_TIMEOUT);
     } else {
         buf_to_send = buffer + 5;
         ln -= 5;
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, command, lValue, lIndex, buffer, ln, USB_TIMEOUT);
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, command, lValue, lIndex, buf_to_send, ln, USB_TIMEOUT);
         ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 250, lValue, lIndex, buffer, 1, USB_TIMEOUT);
     }
 
