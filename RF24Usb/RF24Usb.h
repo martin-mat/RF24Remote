@@ -98,7 +98,7 @@ class RF24Usb: public RF24
 public:
   RF24Usb(uint8_t _cepin, uint8_t _cspin): RF24(_cepin, _cspin) {};
   int parse(int paramtype, const char *p);
-  int store(int paramtype, char *p);
+  int store(int paramtype, char *p, uint8_t &ln);
   int executeCommand(void);
   void callUsb(ERF24Command cmd);
 

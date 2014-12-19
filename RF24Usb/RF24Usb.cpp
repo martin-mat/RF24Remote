@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include <usb.h>
+#ifdef _USB_FRONTEND
+    #include <usb.h>
+#endif
 #include "RF24Usb.h"
 #define USB_TIMEOUT 500
 
@@ -237,6 +239,7 @@ void RF24Usb::callUsb(ERF24Command cmd)
         buf_to_send = buffer + 5;
         ln -= 5;
         ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, command, lValue, lIndex, buffer, ln, USB_TIMEOUT);
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 250, lValue, lIndex, buffer, 1, USB_TIMEOUT);
     }
 
     if (ret<0)
