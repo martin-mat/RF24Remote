@@ -1,68 +1,71 @@
-#include <stdio.h>
 #ifdef _USB_FRONTEND
+    #include <stdio.h>
     #include <usb.h>
     #include "usbconfig.h"
     #include "opendevice.h"
+    #define DEBUG printf
+#else
+    #define DEBUG(args ...)
 #endif
 #include "RF24Usb.h"
 #define USB_TIMEOUT 500
 
 PROGMEM ERF24ParamType RF24Commands[][2][MAX_PARAMS]=
 {
-    /*begin*/ {{}, {}},
-    /*startListening*/ {{}, {}},
-    /*stopListening*/ {{}, {}},
-    /*available*/ {{}, {RF24_bool}},
-    /*availablePipe*/ {{}, {RF24_bool, RF24_uint8}},
-    /*read*/ {{RF24_uint8}, {RF24_buff}},
-    /*write*/ {{RF24_buff, RF24_uint8}, {RF24_bool}},
-    /*writeMulticast*/ {{RF24_buff, RF24_uint8, RF24_bool}, {RF24_bool}},
-    /*openWritingPipe*/ {{RF24_buff}, {}},
-    /*openWritingPipe40*/ {{RF24_uint64}, {}},
-    /*openReadingPipe*/ {{RF24_uint8, RF24_buff}, {}},
-    /*openReadingPipe40*/ {{RF24_uint8, RF24_uint64}, {}},
-    /*printDetails*/ {{}, {RF24_buff}},
-    /*rxFifoFull*/ {{}, {RF24_bool}},
-    /*powerDown*/ {{}, {}},
-    /*powerUp*/ {{}, {}},
-    /*writeFast*/ {{RF24_buff, RF24_uint8}, {RF24_bool}},
-    /*writeFastMulticast*/ {{RF24_buff, RF24_uint8, RF24_bool}, {RF24_bool}},
-    /*writeBlocking*/ {{RF24_buff, RF24_uint8, RF24_uint32}, {RF24_bool}},
-    /*txStandBy*/ {{}, {RF24_bool}},
-    /*txStandByTimeout*/ {{RF24_uint32}, {RF24_bool}},
-    /*writeAckPayload*/ {{RF24_uint8, RF24_buff, RF24_uint8}, {}},
-    /*enableDynamicAck*/ {{}, {}},
-    /*isAckPayloadAvailable*/ {{}, {RF24_bool}},
-    /*whatHappened*/ {{}, {RF24_bool, RF24_bool, RF24_bool}},
-    /*startFastWrite*/ {{RF24_buff, RF24_uint8, RF24_bool}, {}},
-    /*startWrite*/ {{RF24_buff, RF24_uint8, RF24_bool}, {}},
-    /*reUseTX*/ {{}, {}},
-    /*flush_tx*/ {{}, {RF24_uint8}},
-    /*testCarrier*/ {{}, {RF24_bool}},
-    /*testRPD*/ {{}, {RF24_bool}},
-    /*isValid*/ {{}, {RF24_bool}},
-    /*maskIRQ*/ {{RF24_bool, RF24_bool, RF24_bool}, {}},
-    /*setAddressWidth*/ {{RF24_uint8}, {}},
-    /*closeReadingPipe*/ {{RF24_uint8}, {}},
-    /*setRetries*/ {{RF24_uint8, RF24_uint8}, {}},
-    /*setChannel*/ {{RF24_uint8}, {}},
-    /*setPayloadSize*/ {{RF24_uint8}, {}},
-    /*getPayloadSize*/ {{}, {RF24_uint8}},
-    /*getDynamicPayloadSize*/ {{}, {RF24_uint8}},
-    /*enableAckPayload*/ {{}, {}},
-    /*enableDynamicPayloads*/ {{}, {}},
-    /*isPVariant*/ {{}, {RF24_bool}},
-    /*setAutoAck*/ {{RF24_bool}, {}},
-    /*setAutoAckPipe*/ {{RF24_uint8, RF24_bool}, {}},
-    /*setPALevel*/ {{RF24_uint8}, {}},
-    /*getPALevel*/ {{}, {RF24_uint8}},
-    /*setDataRate*/ {{RF24_uint8}, {RF24_bool}},
-    /*getDataRate*/  {{}, {RF24_uint8}},
-    /*setCRCLength*/ {{RF24_uint8}, {}},
-    /*getCRCLength*/ {{}, {RF24_uint8}},
-    /*disableCRC*/ {{}, {}},
-    /*getFailureDetected*/ {{}, {RF24_bool}},
-    /*setFailureDetected*/ {{RF24_bool}, {}},
+    /*begin*/ {{RF24_none}, {RF24_none}},
+    /*startListening*/ {{RF24_none}, {RF24_none}},
+    /*stopListening*/ {{RF24_none}, {RF24_none}},
+    /*available*/ {{RF24_none}, {RF24_bool, RF24_none}},
+    /*availablePipe*/ {{RF24_none}, {RF24_bool, RF24_uint8, RF24_none}},
+    /*read*/ {{RF24_uint8, RF24_none}, {RF24_buff, RF24_none}},
+    /*write*/ {{RF24_buff, RF24_uint8, RF24_none}, {RF24_bool, RF24_none}},
+    /*writeMulticast*/ {{RF24_buff, RF24_uint8, RF24_bool, RF24_none}, {RF24_bool, RF24_none}},
+    /*openWritingPipe*/ {{RF24_buff, RF24_none}, {RF24_none}},
+    /*openWritingPipe40*/ {{RF24_uint64, RF24_none}, {RF24_none}},
+    /*openReadingPipe*/ {{RF24_uint8, RF24_buff, RF24_none}, {RF24_none}},
+    /*openReadingPipe40*/ {{RF24_uint8, RF24_uint64, RF24_none}, {RF24_none}},
+    /*printDetails*/ {{RF24_none}, {RF24_buff, RF24_none}},
+    /*rxFifoFull*/ {{RF24_none}, {RF24_bool, RF24_none}},
+    /*powerDown*/ {{RF24_none}, {RF24_none}},
+    /*powerUp*/ {{RF24_none}, {RF24_none}},
+    /*writeFast*/ {{RF24_buff, RF24_uint8, RF24_none}, {RF24_bool, RF24_none}},
+    /*writeFastMulticast*/ {{RF24_buff, RF24_uint8, RF24_bool, RF24_none}, {RF24_bool, RF24_none}},
+    /*writeBlocking*/ {{RF24_buff, RF24_uint8, RF24_uint32, RF24_none}, {RF24_bool, RF24_none}},
+    /*txStandBy*/ {{RF24_none}, {RF24_bool, RF24_none}},
+    /*txStandByTimeout*/ {{RF24_uint32, RF24_none}, {RF24_bool, RF24_none}},
+    /*writeAckPayload*/ {{RF24_uint8, RF24_buff, RF24_uint8, RF24_none}, {RF24_none}},
+    /*enableDynamicAck*/ {{RF24_none}, {RF24_none}},
+    /*isAckPayloadAvailable*/ {{RF24_none}, {RF24_bool, RF24_none}},
+    /*whatHappened*/ {{RF24_none}, {RF24_bool, RF24_bool, RF24_bool, RF24_none}},
+    /*startFastWrite*/ {{RF24_buff, RF24_uint8, RF24_bool, RF24_none}, {RF24_none}},
+    /*startWrite*/ {{RF24_buff, RF24_uint8, RF24_bool, RF24_none}, {RF24_none}},
+    /*reUseTX*/ {{RF24_none}, {RF24_none}},
+    /*flush_tx*/ {{RF24_none}, {RF24_uint8, RF24_none}},
+    /*testCarrier*/ {{RF24_none}, {RF24_bool, RF24_none}},
+    /*testRPD*/ {{RF24_none}, {RF24_bool, RF24_none}},
+    /*isValid*/ {{RF24_none}, {RF24_bool, RF24_none}},
+    /*maskIRQ*/ {{RF24_bool, RF24_bool, RF24_bool, RF24_none}, {RF24_none}},
+    /*setAddressWidth*/ {{RF24_uint8, RF24_none}, {RF24_none}},
+    /*closeReadingPipe*/ {{RF24_uint8, RF24_none}, {RF24_none}},
+    /*setRetries*/ {{RF24_uint8, RF24_uint8, RF24_none}, {RF24_none}},
+    /*setChannel*/ {{RF24_uint8, RF24_none}, {RF24_none}},
+    /*setPayloadSize*/ {{RF24_uint8, RF24_none}, {RF24_none}},
+    /*getPayloadSize*/ {{RF24_none}, {RF24_uint8, RF24_none}},
+    /*getDynamicPayloadSize*/ {{RF24_none}, {RF24_uint8, RF24_none}},
+    /*enableAckPayload*/ {{RF24_none}, {RF24_none}},
+    /*enableDynamicPayloads*/ {{RF24_none}, {RF24_none}},
+    /*isPVariant*/ {{RF24_none}, {RF24_bool, RF24_none}},
+    /*setAutoAck*/ {{RF24_bool, RF24_none}, {RF24_none}},
+    /*setAutoAckPipe*/ {{RF24_uint8, RF24_bool, RF24_none}, {RF24_none}},
+    /*setPALevel*/ {{RF24_uint8, RF24_none}, {RF24_none}},
+    /*getPALevel*/ {{RF24_none}, {RF24_uint8, RF24_none}},
+    /*setDataRate*/ {{RF24_uint8, RF24_none}, {RF24_bool, RF24_none}},
+    /*getDataRate*/  {{RF24_none}, {RF24_uint8, RF24_none}},
+    /*setCRCLength*/ {{RF24_uint8, RF24_none}, {RF24_none}},
+    /*getCRCLength*/ {{RF24_none}, {RF24_uint8, RF24_none}},
+    /*disableCRC*/ {{RF24_none}, {RF24_none}},
+    /*getFailureDetected*/ {{RF24_none}, {RF24_bool, RF24_none}},
+    /*setFailureDetected*/ {{RF24_bool, RF24_none}, {RF24_none}},
 };
 
 #ifndef _USB_FRONTEND
@@ -83,7 +86,7 @@ int RF24Usb::executeCommand(void)
         case RF24_openWritingPipe40: RF24::openWritingPipe(p_uint64[IPAR][0]); break;
         case RF24_openReadingPipe: RF24::openReadingPipe(p_uint8[IPAR][0], (uint8_t *)p_buf[IPAR]); break;
         case RF24_openReadingPipe40: RF24::openReadingPipe(p_uint8[IPAR][0], p_uint64[IPAR][0]); break;
-//        case RF24_printDetails: RF24::printDetails(out_buf); break;
+        case RF24_printDetails: /*RF24::printDetails(out_buf);*/ p_buf_ln[OPAR]=24; break;
         case RF24_rxFifoFull: p_bool[OPAR][0] = RF24::rxFifoFull(); break;
         case RF24_powerDown: RF24::powerDown(); break;
         case RF24_powerUp: RF24::powerUp(); break;
@@ -140,24 +143,25 @@ int RF24Usb::parse(int paramtype, const char *p)
     ERF24ParamType param;
 
     command = (ERF24Command)*p++;
-    printf("Command:%d\n",command);
+    DEBUG("Parse Command:%d\n",command);
     while ((param = (ERF24ParamType)*p++) != RF24_none)
     {
-        printf("Param:%d\n",param);
+        DEBUG("Parse Param:%d, ",param);
         switch (param)
         {
-            case RF24_bool: p_bool[paramtype][param_cnt_bool++] = (bool)*p++; break;
-            case RF24_uint8: p_uint8[paramtype][param_cnt_uint8++] = (uint8_t)*p++; break;
-            case RF24_uint16: p_uint16[paramtype][param_cnt_uint16++] = (uint16_t)*p; p+=2; break;
-            case RF24_uint32: p_uint32[paramtype][param_cnt_uint32++] = (uint32_t)*p; p+=4; break;
-            case RF24_uint64: p_uint64[paramtype][param_cnt_uint64++] = (uint32_t)*p; p+=8; break;
+            case RF24_bool: DEBUG("%d", *(uint8_t *)p); p_bool[paramtype][param_cnt_bool++] = *(bool *)p++; break;
+            case RF24_uint8: DEBUG("%d", *(uint8_t *)p); p_uint8[paramtype][param_cnt_uint8++] = *(uint8_t *)p++; break;
+            case RF24_uint16: DEBUG("%d", *(uint16_t *)p); p_uint16[paramtype][param_cnt_uint16++] = *(uint16_t *)p; p+=2; break;
+            case RF24_uint32: DEBUG("%ld", *(uint32_t *)p); p_uint32[paramtype][param_cnt_uint32++] = *(uint32_t *)p; p+=4; break;
+            case RF24_uint64: DEBUG("%lx", *(uint64_t *)p);p_uint64[paramtype][param_cnt_uint64++] = *(uint64_t *)p; p+=8; break;
             case RF24_buff:
                 p_buf_ln[paramtype] = (uint8_t) *p++;
                 p_buf_ln[paramtype] = p_buf_ln[paramtype]>MAX_BUFF?MAX_BUFF:p_buf_ln[paramtype];
                 memcpy(p_buf[paramtype], p, p_buf_ln[paramtype]); p+=p_buf_ln[paramtype];
-                printf("buf len:%d\n", p_buf_ln[paramtype]);
+                DEBUG("%d", p_buf_ln[paramtype]);
                 break;
         } 
+    DEBUG("\n");
     }
 }
 
@@ -171,26 +175,34 @@ int RF24Usb::store(int paramtype, char *p, uint8_t &ln)
     uint8_t cnt=0;
     char *start = p;
 
-    printf("Command:%d\n", command);
+    DEBUG("Store Command:%d\n", command);
     
     *(ERF24Command *)p = command; p++;
     while ((*p = RF24Commands[command][paramtype][cnt]) != RF24_none)
     {
         cnt++;
+        DEBUG("Store Param:%d, ",*p);
         switch (*p++)
         {
-            case RF24_bool: *((bool *)p) = p_bool[paramtype][param_cnt_bool++]; p++; break;
-            case RF24_uint8: *((uint8_t *)p) = p_uint8[paramtype][param_cnt_uint8++]; p++; break;
-            case RF24_uint16: *((uint16_t *)p) = p_uint16[paramtype][param_cnt_uint16++]; p+=2; break;
-            case RF24_uint32: *((uint32_t *)p) = p_uint32[paramtype][param_cnt_uint32++]; p+=4; break;
-            case RF24_uint64: *((uint32_t *)p) = p_uint64[paramtype][param_cnt_uint64++]; p+=8; break;
+            case RF24_bool: *((bool *)p) = p_bool[paramtype][param_cnt_bool++]; DEBUG("%d", *(uint8_t *)p); p++; break;
+            case RF24_uint8: *((uint8_t *)p) = p_uint8[paramtype][param_cnt_uint8++]; DEBUG("%d", *(uint8_t *)p); p++; break;
+            case RF24_uint16: *((uint16_t *)p) = p_uint16[paramtype][param_cnt_uint16++]; DEBUG("%d", *(uint16_t *)p); p+=2; break;
+            case RF24_uint32: *((uint32_t *)p) = p_uint32[paramtype][param_cnt_uint32++]; DEBUG("%ld", *(uint32_t *)p); p+=4; break;
+            case RF24_uint64: *((uint64_t *)p) = p_uint64[paramtype][param_cnt_uint64++]; DEBUG("%lx", *(uint64_t *)p); p+=8; break;
             case RF24_buff:
+                DEBUG("%d", p_buf_ln[paramtype]);
                 *((uint8_t *)p) = p_buf_ln[paramtype]; p++;
                 memcpy(p, p_buf[paramtype], p_buf_ln[paramtype]); p+=p_buf_ln[paramtype];
                 break;
         }
+        DEBUG("\n");
     }
+    p++;
     ln = p - start;
+    DEBUG("Store ln:%d '" , ln);
+    for (cnt=0; cnt<ln; cnt++)
+        DEBUG("%02X ", start[cnt]);
+    DEBUG("'\n");
 }
 
 /*********************************************************************
@@ -227,25 +239,39 @@ void RF24Usb::callUsb(ERF24Command cmd)
         return;
     }
 
+    printf("\ncallUsb:%d\n", cmd);
+
     command = cmd;
     store(IPAR, buffer, ln);
+    printf("callUsb:%d, len=%d\n", cmd, ln);
 
-    lValue = to_send[1] + to_send[2]>>8;
-    lIndex = to_send[3] + to_send[4]>>8;
-    if (ln>5)   /* short input data, handle everything in one shot */
+    lValue = buffer[1] + (buffer[2]<<8);
+    lIndex = buffer[3] + (buffer[4]<<8);
+    if (ln<=6)   /* short input data, handle everything in one shot */
     {
         ln = 0;
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, command, lValue, lIndex, buffer, ln, USB_TIMEOUT);
-    } else {
+        printf("callUsb short\n");
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, command, lValue, lIndex, buffer, 10, USB_TIMEOUT);
+        printf("usb_control_device ret:%d\n", ret);
+        if (ret<0)
+            fprintf(stderr, "usb_control short sending usb data failed\n");
+   } else {
         buf_to_send = buffer + 5;
         ln -= 5;
+        printf("callUsb long1\n");
         ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, command, lValue, lIndex, buf_to_send, ln, USB_TIMEOUT);
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 250, lValue, lIndex, buffer, 1, USB_TIMEOUT);
+        printf("usb_control_device ret:%d\n", ret);
+        if (ret<0)
+            fprintf(stderr, "usb_control long 1 sending usb data failed\n");
+        printf("callUsb long2\n");
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 250, lValue, lIndex, buffer, 10, USB_TIMEOUT);
+        printf("usb_control_device ret:%d\n", ret);
+        if (ret<0)
+            fprintf(stderr, "usb_control long 2 sending usb data failed\n");
     }
 
-    if (ret<0)
-        fprintf(stderr, "usb_controll sending usb data failed");
 
+    printf("callUsb parsing results\n");
     parse(OPAR, buffer);
 }
 

@@ -93,7 +93,9 @@ int main(int argc, char** argv){
       radio.openWritingPipe(pipes[0]);
       radio.openReadingPipe(1,pipes[1]);
     } else {
+      printf("writing pipe:%lx\n", pipes[1]);
       radio.openWritingPipe(pipes[1]);
+      printf("reading pipe:%lx\n", pipes[0]);
       radio.openReadingPipe(1,pipes[0]);
       radio.startListening();
     }

@@ -15,7 +15,7 @@ uchar buff_pos;
 uchar buff_remaining;
 uchar buff_size;
 
-RF24Usb rf24usb(1,2);
+RF24Usb rf24usb(4,5);
 
 RF24UsbDevice::RF24UsbDevice(void)
 {
@@ -25,7 +25,7 @@ RF24UsbDevice::RF24UsbDevice(void)
 void RF24UsbDevice::begin(void)
 {
     // disable timer 0 overflow interrupt (used for millis)
-    //TIMSK0&=!(1<<TOIE0);
+    TIMSK0&=!(1<<TOIE0);
 
     buff_pos = 0;
     buff_remaining = 0;
@@ -73,6 +73,7 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
         buffer[2] = rq->wValue.bytes[1];
         buffer[3] = rq->wIndex.bytes[0];
         buffer[4] = rq->wIndex.bytes[1];
+        buffer[5] = 0;
         buff_pos = 5;
         buff_remaining = rq->wLength.word;
     };
@@ -105,12 +106,13 @@ uchar usbFunctionWrite(uchar *data, uchar len)
     for (i=0; i<len; i++)
         buffer[buff_pos++] = data[i];
 
-    if (buff_remaining == 0)
-    {
-        rf24usb.parse(IPAR, buffer);
-        rf24usb.executeCommand();
-        rf24usb.store(OPAR, buffer, buff_size);
-    }        
+    //if (buff_remaining == 0)
+    //{
+    //    buffer[buff_pos] = 0;
+        //rf24usb.parse(IPAR, buffer);
+        //rf24usb.executeCommand();
+        //rf24usb.store(OPAR, buffer, buff_size);
+    //}        
     return buff_remaining == 0;
 }
 

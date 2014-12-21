@@ -25,7 +25,7 @@ SOURCES = ${PROGRAMS:=.cpp}
 all: ${PROGRAMS}
 
 ${PROGRAMS}: ${SOURCES}
-	g++ ${CCFLAGS} -Wall -I../ -I../../ -D_USB_FRONTEND $@.cpp ../RF24Usb.cpp ../opendevice.c -lusb -o $@
+	g++ ${CCFLAGS} -Wall -I../ -I../../ -I. -D_USB_FRONTEND $@.cpp ../RF24Usb.cpp opendevice.c -lusb -o $@
 
 clean:
 	rm -rf $(PROGRAMS)
