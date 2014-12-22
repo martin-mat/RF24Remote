@@ -14,7 +14,7 @@
 #include <string>
 #include <time.h>
 #include <unistd.h>
-#include "./RF24Usb.h"
+#include "RF24UsbFrontend.h"
 
 
 using namespace std;
@@ -34,7 +34,7 @@ using namespace std;
 //RF24 radio(RPI_BPLUS_GPIO_J8_15,RPI_BPLUS_GPIO_J8_24, BCM2835_SPI_SPEED_8MHZ);
 
 // Setup for GPIO 22 CE and CE0 CSN with SPI Speed @ 8Mhz
-RF24Usb radio(1,2);
+RF24UsbFrontend radio;
 
 #undef millis
 unsigned long millis(void)
@@ -93,9 +93,7 @@ int main(int argc, char** argv){
       radio.openWritingPipe(pipes[0]);
       radio.openReadingPipe(1,pipes[1]);
     } else {
-      printf("writing pipe:%lx\n", pipes[1]);
       radio.openWritingPipe(pipes[1]);
-      printf("reading pipe:%lx\n", pipes[0]);
       radio.openReadingPipe(1,pipes[0]);
       radio.startListening();
     }
