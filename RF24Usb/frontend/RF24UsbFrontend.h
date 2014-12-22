@@ -1,11 +1,13 @@
 #ifndef __RF24UsbFrontend__
 #define __RF24UsbFrontend__
 
+#include <usb.h>
 #include "RF24Usb.h"
 
 class RF24UsbFrontend: public RF24Usb
 {
 private:
+    usb_dev_handle *handle;
 public:
     RF24UsbFrontend(void) {};
     void callUsb(ERF24Command cmd);

@@ -1,16 +1,14 @@
 #ifdef _USB_FRONTEND
     #include <stdio.h>
-    #include <usb.h>
-    #include "usbconfig.h"
-    #include "opendevice.h"
-    #define DEBUG printf
+    #define DEBUG(args ...)
+    //#define DEBUG printf
 #else
     #define DEBUG(args ...)
 #endif
 #include "RF24Usb.h"
 #define USB_TIMEOUT 500
 
-PROGMEM ERF24ParamType RF24Commands[][2][MAX_PARAMS]=
+const ERF24ParamType RF24Commands[][2][MAX_PARAMS]  =
 {
     /*begin*/ {{RF24_none}, {RF24_none}},
     /*startListening*/ {{RF24_none}, {RF24_none}},
@@ -89,7 +87,7 @@ int RF24Usb::parse(int paramtype, const char *p)
             case RF24_uint8: DEBUG("%d", *(uint8_t *)p); p_uint8[paramtype][param_cnt_uint8++] = *(uint8_t *)p++; break;
             case RF24_uint16: DEBUG("%d", *(uint16_t *)p); p_uint16[paramtype][param_cnt_uint16++] = *(uint16_t *)p; p+=2; break;
             case RF24_uint32: DEBUG("%d", *(uint32_t *)p); p_uint32[paramtype][param_cnt_uint32++] = *(uint32_t *)p; p+=4; break;
-            case RF24_uint64: DEBUG("%llx", *(uint64_t *)p);p_uint64[paramtype][param_cnt_uint64++] = *(uint64_t *)p; p+=8; break;
+            case RF24_uint64: DEBUG("%lx", *(uint64_t *)p);p_uint64[paramtype][param_cnt_uint64++] = *(uint64_t *)p; p+=8; break;
             case RF24_buff:
                 p_buf_ln[paramtype] = (uint8_t) *p++;
                 p_buf_ln[paramtype] = p_buf_ln[paramtype]>MAX_BUFF?MAX_BUFF:p_buf_ln[paramtype];
@@ -103,7 +101,7 @@ int RF24Usb::parse(int paramtype, const char *p)
     return 0;
 }
 
-int RF24Usb::store(int paramtype, char *p, uint8_t &ln)
+int RF24Usb::store(int paramtype, char *p, uint8_t *ln)
 {
     uint8_t param_cnt_bool = 0;
     uint8_t param_cnt_uint8 = 0;
@@ -126,7 +124,7 @@ int RF24Usb::store(int paramtype, char *p, uint8_t &ln)
             case RF24_uint8: *((uint8_t *)p) = p_uint8[paramtype][param_cnt_uint8++]; DEBUG("%d", *(uint8_t *)p); p++; break;
             case RF24_uint16: *((uint16_t *)p) = p_uint16[paramtype][param_cnt_uint16++]; DEBUG("%d", *(uint16_t *)p); p+=2; break;
             case RF24_uint32: *((uint32_t *)p) = p_uint32[paramtype][param_cnt_uint32++]; DEBUG("%d", *(uint32_t *)p); p+=4; break;
-            case RF24_uint64: *((uint64_t *)p) = p_uint64[paramtype][param_cnt_uint64++]; DEBUG("%llx", *(uint64_t *)p); p+=8; break;
+            case RF24_uint64: *((uint64_t *)p) = p_uint64[paramtype][param_cnt_uint64++]; DEBUG("%lx", *(uint64_t *)p); p+=8; break;
             case RF24_buff:
                 DEBUG("%d", p_buf_ln[paramtype]);
                 *((uint8_t *)p) = p_buf_ln[paramtype]; p++;
@@ -136,12 +134,11 @@ int RF24Usb::store(int paramtype, char *p, uint8_t &ln)
         DEBUG("\n");
     }
     p++;
-    ln = p - start;
-    DEBUG("Store ln:%d '" , ln);
-    for (cnt=0; cnt<ln; cnt++)
+    *ln = p - start;
+    DEBUG("Store ln:%d '" , *ln);
+    for (cnt=0; cnt<*ln; cnt++)
         DEBUG("%02X ", start[cnt]);
     DEBUG("'\n");
     return 0;
 }
-
 

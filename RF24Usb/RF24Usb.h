@@ -3,13 +3,13 @@
 
 #include "RF24.h"
 
-#ifndef ARDUINO
-#define PROGMEM
-#endif
+//#ifndef ARDUINO
+//#define PROGMEM
+//#endif
 
 #define MAX_PARAMS_TYPE 3
 #define MAX_BUFF 32
-#define MAX_PARAMS 5
+#define MAX_PARAMS 4
 
 #define IPAR 0
 #define OPAR 1
@@ -84,14 +84,14 @@ typedef enum
 } ERF24Command;
 
 
-extern PROGMEM ERF24ParamType RF24Commands[][2][MAX_PARAMS];
+extern const ERF24ParamType RF24Commands[][2][MAX_PARAMS];
 
 class RF24Usb: public RF24
 {
 public:
-    RF24Usb(void): RF24(0, 0) {};
+    RF24Usb(void): RF24(4, 5) {};
     int parse(int paramtype, const char *p);
-    int store(int paramtype, char *p, uint8_t &ln);
+    int store(int paramtype, char *p, uint8_t *ln);
     int executeCommand(void);
 
 protected:

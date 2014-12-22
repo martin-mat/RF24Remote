@@ -2,9 +2,10 @@
 #include <usb.h>
 #include "usbconfig.h"
 #include "opendevice.h"
-#define DEBUG printf
+//#define DEBUG printf
+#define DEBUG(args ...)
 #include "RF24UsbFrontend.h"
-#define USB_TIMEOUT 500
+#define USB_TIMEOUT 100
 
 
 RF24::RF24(uint8_t _cepin, uint8_t _cspin)
@@ -18,16 +19,54 @@ RF24::RF24(uint8_t _cepin, uint8_t _cspin)
 void RF24UsbFrontend::callUsb(ERF24Command cmd)
 {
     uint8_t ln;
-    usb_dev_handle *handle = NULL;
-    const unsigned char rawVid[2] = {USB_CFG_VENDOR_ID}, rawPid[2] = {USB_CFG_DEVICE_ID};
-    char vendor[] = {USB_CFG_VENDOR_NAME, 0}, product[] = {USB_CFG_DEVICE_NAME, 0};
-    char buffer[256];
+    char buffer[128];
     char *buf_to_send;
-    int vid, pid;
     int ret;
 
     uint16_t lValue;
     uint16_t lIndex;
+
+    DEBUG("\ncallUsb:%d\n", cmd);
+
+    command = cmd;
+    store(IPAR, buffer, &ln);
+    DEBUG("callUsb:%d, len=%d\n", cmd, ln);
+
+    lValue = buffer[1] + (buffer[2]<<8);
+    lIndex = buffer[3] + (buffer[4]<<8);
+    if (ln<=6)   /* short input data, handle everything in one shot */
+    {
+        ln = 0;
+        DEBUG("callUsb short\n");
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, command, lValue, lIndex, buffer, 256, USB_TIMEOUT);
+        DEBUG("usb_control_device ret:%d\n", ret);
+        if (ret<0)
+            fprintf(stderr, "usb_control short sending usb data failed\n");
+   } else {
+        buf_to_send = buffer + 5;
+        ln -= 5;
+        DEBUG("callUsb long1\n");
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, command, lValue, lIndex, buf_to_send, ln, USB_TIMEOUT);
+        DEBUG("usb_control_device ret:%d\n", ret);
+        if (ret<0)
+            fprintf(stderr, "usb_control long 1 sending usb data failed\n");
+        DEBUG("callUsb long2\n");
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 250, lValue, lIndex, buffer, 256, USB_TIMEOUT);
+        DEBUG("usb_control_device ret:%d\n", ret);
+        if (ret<0)
+            fprintf(stderr, "usb_control long 2 sending usb data failed\n");
+    }
+
+
+    DEBUG("callUsb parsing results\n");
+    parse(OPAR, buffer);
+}
+
+void RF24UsbFrontend::begin(void)
+{
+    const unsigned char rawVid[2] = {USB_CFG_VENDOR_ID}, rawPid[2] = {USB_CFG_DEVICE_ID};
+    char vendor[] = {USB_CFG_VENDOR_NAME, 0}, product[] = {USB_CFG_DEVICE_NAME, 0};
+    int vid, pid;
 
     usb_init();
 
@@ -40,44 +79,7 @@ void RF24UsbFrontend::callUsb(ERF24Command cmd)
         return;
     }
 
-    printf("\ncallUsb:%d\n", cmd);
 
-    command = cmd;
-    store(IPAR, buffer, ln);
-    printf("callUsb:%d, len=%d\n", cmd, ln);
-
-    lValue = buffer[1] + (buffer[2]<<8);
-    lIndex = buffer[3] + (buffer[4]<<8);
-    if (ln<=6)   /* short input data, handle everything in one shot */
-    {
-        ln = 0;
-        printf("callUsb short\n");
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, command, lValue, lIndex, buffer, 10, USB_TIMEOUT);
-        printf("usb_control_device ret:%d\n", ret);
-        if (ret<0)
-            fprintf(stderr, "usb_control short sending usb data failed\n");
-   } else {
-        buf_to_send = buffer + 5;
-        ln -= 5;
-        printf("callUsb long1\n");
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, command, lValue, lIndex, buf_to_send, ln, USB_TIMEOUT);
-        printf("usb_control_device ret:%d\n", ret);
-        if (ret<0)
-            fprintf(stderr, "usb_control long 1 sending usb data failed\n");
-        printf("callUsb long2\n");
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 250, lValue, lIndex, buffer, 10, USB_TIMEOUT);
-        printf("usb_control_device ret:%d\n", ret);
-        if (ret<0)
-            fprintf(stderr, "usb_control long 2 sending usb data failed\n");
-    }
-
-
-    printf("callUsb parsing results\n");
-    parse(OPAR, buffer);
-}
-
-void RF24UsbFrontend::begin(void)
-{
     callUsb(RF24_begin);
 }
 

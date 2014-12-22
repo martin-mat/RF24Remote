@@ -146,7 +146,7 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
     {
         rf24usb.parse(IPAR, buffer);
         rf24usb.executeCommand();
-        rf24usb.store(OPAR, buffer, buff_size);
+        rf24usb.store(OPAR, buffer, &buff_size);
         usbMsgPtr = (uchar *)buffer;
         return buff_size;
     } else // long input

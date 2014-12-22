@@ -67,7 +67,8 @@ int main(int argc, char** argv){
   // Setup and configure rf radio
   radio.begin();
   radio.enableDynamicPayloads();
-  radio.setRetries(5,15);
+  //radio.setRetries(5,15);
+  radio.setRetries(0,3);
   radio.printDetails();
 
 
