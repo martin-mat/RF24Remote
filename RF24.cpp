@@ -704,6 +704,35 @@ void RF24::printDetails(void)
 
 }
 
+uint8_t RF24::dumpRegisters(char *str)
+{
+    uint8_t reg=0;
+    uint8_t aw;
+    char *begin=str;
+
+    *str = getStatus(); str++;
+    while (reg<=FEATURE)    // FEATURE is the last register
+    {   
+        // address registers read multiple bytes
+        if ((reg == RX_ADDR_P0) || (reg == RX_ADDR_P1) || (reg == TX_ADDR))
+        {
+            read_register(reg, str, aw); str+=aw;  //aw was already read
+        } else
+        {   
+            *str = read_register(reg);
+            if (reg == SETUP_AW)
+                aw = *str;
+            if (reg == FIFO_STATUS)   // gap from FIFO_STATUS to FYNPD
+                reg = DYNPD;
+            else
+                reg++;
+            str++;
+        }
+    }
+
+    return str-begin;   // return length of dump
+}   
+
 #endif
 /****************************************************************************/
 

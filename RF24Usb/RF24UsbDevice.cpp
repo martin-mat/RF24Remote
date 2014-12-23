@@ -37,7 +37,7 @@ int RF24UsbDevice::executeCommand(void)
         case RF24_openWritingPipe40: RF24::openWritingPipe(p_uint64[IPAR][0]); break;
         case RF24_openReadingPipe: RF24::openReadingPipe(p_uint8[IPAR][0], (uint8_t *)p_buf[IPAR]); break;
         case RF24_openReadingPipe40: RF24::openReadingPipe(p_uint8[IPAR][0], p_uint64[IPAR][0]); break;
-        case RF24_printDetails: /*RF24::printDetails(out_buf);*/ p_buf_ln[OPAR]=24; break;
+        case RF24_printDetails: p_buf_ln[OPAR]=RF24::dumpRegisters(p_buf[OPAR]); break;
         case RF24_rxFifoFull: p_bool[OPAR][0] = RF24::rxFifoFull(); break;
         case RF24_powerDown: RF24::powerDown(); break;
         case RF24_powerUp: RF24::powerUp(); break;

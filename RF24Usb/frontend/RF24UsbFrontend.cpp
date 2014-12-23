@@ -132,7 +132,14 @@ void RF24UsbFrontend::openReadingPipe(uint8_t number, const uint8_t *address)
 
 void RF24UsbFrontend::printDetails(void)
 {
+    char *str;
+
     callUsb(RF24_printDetails);
+    str = p_buf[OPAR];
+
+    print_status(str[0]);
+    printf("Addr length\t = %d\n", str[SETUP_AW+1]+3);
+    printf("RX_ADDR_P0-1\t %
 }
 
 bool RF24UsbFrontend::available(uint8_t* pipe_num)
