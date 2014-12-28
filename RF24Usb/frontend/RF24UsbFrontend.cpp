@@ -5,6 +5,7 @@
 //#define DEBUG printf
 #define DEBUG(args ...)
 #include "RF24UsbFrontend.h"
+#include "nRF24L01.h"
 #define USB_TIMEOUT 100
 
 
@@ -133,13 +134,38 @@ void RF24UsbFrontend::openReadingPipe(uint8_t number, const uint8_t *address)
 void RF24UsbFrontend::printDetails(void)
 {
     char *str;
+    uint8_t status;
+    uint8_t aw;
+    uint8_t i;
 
     callUsb(RF24_printDetails);
     str = p_buf[OPAR];
 
-    print_status(str[0]);
-    printf("Addr length\t = %d\n", str[SETUP_AW+1]+3);
-    printf("RX_ADDR_P0-1\t %
+    status = str[0];
+    printf("STATUS\t\t = 0x%02x RX_DR=%x TX_DS=%x MAX_RT=%x RX_P_NO=%x TX_FULL=%x\r\n",
+           status,
+           (status & _BV(RX_DR))?1:0,
+           (status & _BV(TX_DS))?1:0,
+           (status & _BV(MAX_RT))?1:0,
+           ((status >> RX_P_NO) & 0b111),
+           (status & _BV(TX_FULL))?1:0
+          );
+    aw = str[SETUP_AW+1]+3;
+    printf("Addr width\t = %d\n", aw);
+    printf("RX_ADDR_P0-1\t = ");
+    for (i=0; i < aw; i++)
+        printf("%02x", str[RX_ADDR_P0+i+1]);
+    printf(" ");
+    for (i=0; i < aw; i++)
+        printf("%02x ", str[RX_ADDR_P1+i+1+aw]);
+    printf("\n");
+    printf("RX_ADDR_P2-5\t = ");
+    for (i=0; i<4; i++)
+        printf("%02x ", str[RX_ADDR_P2 + 2*aw + 1 + i]);
+    printf("TX_ADDR\t = ");
+    for (i=0; i < aw; i++)
+        printf("%02x", str[TX_ADDR + 2*aw + 1 + i]);
+    
 }
 
 bool RF24UsbFrontend::available(uint8_t* pipe_num)
