@@ -7,6 +7,11 @@
 //#define PROGMEM
 //#endif
 
+// USB protocol version
+#define USB_PROTOCOL_VERSION 1
+
+#define USB_CMD_VERSIONCHECK 250
+
 #define MAX_PARAMS_TYPE 3
 #define MAX_BUFF 64
 #define MAX_PARAMS 4

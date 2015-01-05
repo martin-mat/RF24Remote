@@ -8,9 +8,10 @@ class RF24UsbFrontend: public RF24Usb
 {
 private:
     usb_dev_handle *handle;
+    uint8_t request_nr;
 public:
-    RF24UsbFrontend(void) {};
-    void callUsb(ERF24Command cmd);
+    RF24UsbFrontend(void);
+    int callUsb(ERF24Command cmd);
 
     void begin(void);
     void startListening(void);

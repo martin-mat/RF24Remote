@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <usb.h>
 #include <time.h>
+#include <stdarg.h>
 #include "usbconfig.h"
 #include "opendevice.h"
 #define DEBUG printf
@@ -33,6 +34,20 @@ static const char * const rf24_pa_dbm_str[] = {
     "PA_MAX",
 };
 
+void fatal(int retval, const char* format, ...)
+{
+    va_list argptr;
+    va_start(argptr, format);
+    vfprintf(stderr, format, argptr);
+    va_end(argptr);
+    exit(retval);
+}
+
+RF24UsbFrontend::RF24UsbFrontend(void)
+{
+}
+
+
 RF24::RF24(uint8_t _cepin, uint8_t _cspin)
 {
 }
@@ -47,11 +62,10 @@ unsigned long millisd(void)
     return (tm.tv_sec * 1000) + (tm.tv_usec / 1000);
 }
 
-void RF24UsbFrontend::callUsb(ERF24Command cmd)
+int RF24UsbFrontend::callUsb(ERF24Command cmd)
 {
     uint8_t ln;
     uint8_t buffer[128];
-    uint8_t *buf_to_send;
     int ret;
     uint8_t i;
     uint8_t buff_pos;
@@ -60,6 +74,7 @@ void RF24UsbFrontend::callUsb(ERF24Command cmd)
     uint16_t lValue;
     uint16_t lIndex;
 
+    ms = millisd();
     DEBUG("\ncallUsb:%d\n", cmd);
 
     command = cmd;
@@ -69,54 +84,42 @@ void RF24UsbFrontend::callUsb(ERF24Command cmd)
         DEBUG("%02x ", buffer[i]);
     DEBUG("\n");
 
-    lValue = buffer[1] + (buffer[2]<<8);
-    lIndex = buffer[3] + (buffer[4]<<8);
-    DEBUG("buff34=%04x\n",  buffer[3] + (buffer[4]<<8));
-    if (ln<=6)   /* short input data, handle everything in one shot */
-    {
-        ln = 0;
-        DEBUG("callUsb short\n");
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, command, lValue, lIndex, (char *)buffer, 256, USB_TIMEOUT);
-        DEBUG("usb_control_device ret:%d\n", ret);
-        if (ret<0)
-            fprintf(stderr, "usb_control short sending usb data failed:%d %s\n", ret, usb_strerror());
-   } else {
-        buf_to_send = buffer + 5;
-        ln -= 5;
-        DEBUG("callUsb long1\n");
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, command, lValue, lIndex, (char *)buf_to_send, ln, USB_TIMEOUT);
-        DEBUG("usb_control_device ret:%d\n", ret);
-        if (ret<0)
-            fprintf(stderr, "usb_control long 1 sending usb data failed:%d\n", ret);
-        DEBUG("callUsb long2\n");
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 250, lValue, lIndex, (char *)buffer, 256, USB_TIMEOUT);
-        DEBUG("usb_control_device ret:%d\n", ret);
-        if (ret<0)
-            fprintf(stderr, "usb_control long 2 sending usb data failed:%d '%s'\n", ret, usb_strerror());
-    }
 
-    do
-    {
+    lIndex = request_nr;
+    lValue = 0;
+    DEBUG("callUsb\n");
+    ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, command, lValue, lIndex, (char *)buffer + 1, ln - 1, USB_TIMEOUT);
+    DEBUG("usb_control_device ret:%d\n", ret);
+    if (ret<0)
+        fatal(-1, "usb_control_msg sending usb data failed:%d\n", ret);
+
     DEBUG("callUsb expecting data from driver, command %d\n", command);
     buff_pos = 0;
-    ms = millisd();
     do
     {
         ret = usb_interrupt_read(handle, USB_ENDPOINT_IN | 1, (char *)buffer + buff_pos, sizeof(buffer), 2000);
-        DEBUG("callUsb usb_interrupt_read:%d, together:%d\n", ret, buffer[0]);
+        DEBUG("callUsb usb_interrupt_read:%d, expected:%d\n", ret, buffer[0]);
         if (ret>0)
         {
             buff_pos += ret;
         }
-    } while ((buff_pos <= buffer[0]) && (ret > 0));
+    } while ((buff_pos < buffer[0]) && (ret > 0));
     if (ret<0)
-        fprintf(stderr, "usb_interrupt_read failed:%d '%s'\n", ret, usb_strerror());
-    DEBUG("callUsb usb_interrupt_read took %lu ms\n", millisd() - ms);
+        fatal(-1, "usb_interrupt_read failed:%d '%s'\n", ret, usb_strerror());
+
     DEBUG("received reply to command:%d\n", buffer[1]);
-    } while (buffer[1] != command);
+
+    if (buffer[1] != request_nr)
+        fatal(-1, "usb_interrupt_read returned wrong command index. Expected:%d, obtained %d\n", request_nr, buffer[1]);
+
+    if (buffer[2] != command)
+        fatal(-1, "usb_interrupt_read returned wrong command. Expected:%d, obtained %d\n", command, buffer[2]);
 
     DEBUG("callUsb parsing results\n");
-    parse(OPAR, buffer+1);
+    parse(OPAR, buffer+2);
+    request_nr++;
+    DEBUG("callUsb took %lu ms\n", millisd() - ms);
+    return 0;
 }
 
 void RF24UsbFrontend::begin(void)
@@ -124,6 +127,8 @@ void RF24UsbFrontend::begin(void)
     const unsigned char rawVid[2] = {USB_CFG_VENDOR_ID}, rawPid[2] = {USB_CFG_DEVICE_ID};
     char vendor[] = {USB_CFG_VENDOR_NAME, 0}, product[] = {USB_CFG_DEVICE_NAME, 0};
     int vid, pid;
+    int ret;
+    uint8_t buffer[128];
 
     usb_init();
 
@@ -131,10 +136,22 @@ void RF24UsbFrontend::begin(void)
     pid = rawPid[1] * 256 + rawPid[0];
 
     if(usbOpenDevice(&handle, vid, vendor, pid, product, NULL, NULL, NULL) != 0)
-    {
-        fprintf(stderr, "Could not find USB device \"%s\" with vid=0x%x pid=0x%x\n", product, vid, pid);
-        return;
-    }
+        fatal(-1, "Could not find USB device \"%s\" with vid=0x%x pid=0x%x\n", product, vid, pid);
+    request_nr = 0;
+
+    // exmptiy thei interrupt queue
+    DEBUG("Emptying usb interrupt queue...");
+    ret = usb_interrupt_read(handle, USB_ENDPOINT_IN | 1, (char *)buffer, sizeof(buffer), 100);
+    DEBUG("done, returned %d.\n", ret);
+
+    DEBUG("Verifying protocol version\n");
+    ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, USB_CMD_VERSIONCHECK, 0, 0, (char *)buffer, sizeof(buffer), USB_TIMEOUT);
+    DEBUG("usb_control_msg ret:%d\n", ret);
+    if (ret != 1)
+        fatal(-1, "usb client returned unexpected reply on version check, ret=%d\n", ret);
+
+    if (buffer[0] != USB_PROTOCOL_VERSION)
+        fatal(-1, "usb client returned wrong protocol version. Expected:%d, received:%d\n", USB_PROTOCOL_VERSION, buffer[0]);
 
 
     callUsb(RF24_begin);
@@ -459,7 +476,6 @@ uint8_t RF24UsbFrontend::getDynamicPayloadSize(void)
 {
     callUsb(RF24_getDynamicPayloadSize);
     return p_uint8[OPAR][0];
-
 }
 
 void RF24UsbFrontend::enableAckPayload(void)
@@ -533,8 +549,6 @@ void RF24UsbFrontend::disableCRC(void)
     callUsb(RF24_disableCRC);
 }
 
-/* bool RF24UsbFrontend::failureDetected */
-
 void RF24UsbFrontend::openReadingPipe(uint8_t number, uint64_t address)
 {
     p_uint8[IPAR][0] = number;
@@ -548,19 +562,5 @@ void RF24UsbFrontend::openWritingPipe(uint64_t address)
     callUsb(RF24_openWritingPipe40);
 }
 
-/*
-
-bool RF24UsbFrontend::waitForFIFO(bool reuse, int8_t timeout, void (*poll)(void))
-{
-}
-
-bool RF24UsbFrontend::waitForTransfer(void (*poll)(void))
-{
-}
-
-bool RF24UsbFrontend::txStandByPoll(uint32_t timeout, void (*poll)(void))
-{
-}
-*/
 
  

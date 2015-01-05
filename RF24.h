@@ -22,6 +22,9 @@
   #include <DigitalIO.h>
 #endif
 
+/** max payload for RF24 **/
+#define RF24_MAX_PAYLOAD 32
+
 /**
  * Power Amplifier level.
  *
@@ -60,8 +63,8 @@ private:
   uint8_t csn_pin; /**< SPI Chip select */
 #if defined (__linux)
   uint16_t spi_speed; /**< SPI Bus Speed */
-  uint8_t spi_rxbuff[32+1] ; //SPI receive buffer (payload max 32 bytes)
-  uint8_t spi_txbuff[32+1] ; //SPI transmit buffer (payload max 32 bytes + 1 byte for the command)
+  uint8_t spi_rxbuff[RF24_MAX_PAYLOAD+1] ; //SPI receive buffer (payload max 32 bytes)
+  uint8_t spi_txbuff[RF24_MAX_PAYLOAD+1] ; //SPI transmit buffer (payload max 32 bytes + 1 byte for the command)
 #endif  
   bool p_variant; /* False for RF24L01 and true for RF24L01P */
   uint8_t payload_size; /**< Fixed size of payloads */

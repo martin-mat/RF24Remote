@@ -471,7 +471,7 @@ bool RF24::txStandByPoll(uint32_t timeout, void (*poll)(void))
                                     #if defined (NO_MILLIS)
                                     if(mls >= timeout) {
                                     #else
-                                    if((millis() - timer) >= timeout)
+                                    if((millis() - timer) >= timeout) {
                                     #endif
                                         ce(LOW); flush_tx(); return 0;
                                     }
@@ -646,7 +646,7 @@ void RF24::setChannel(uint8_t channel)
 
 void RF24::setPayloadSize(uint8_t size)
 {
-  payload_size = rf24_min(size,32);
+  payload_size = rf24_min(size,RF24_MAX_PAYLOAD);
 }
 
 /****************************************************************************/
@@ -1198,7 +1198,7 @@ uint8_t RF24::getDynamicPayloadSize(void)
 
   #endif
 
-  if(result > 32) { flush_rx(); delay(2); return 0; }
+  if(result > RF24_MAX_PAYLOAD) { flush_rx(); delay(2); return 0; }
   return result;
 }
 
@@ -1450,7 +1450,7 @@ void RF24::writeAckPayload(uint8_t pipe, const void* buf, uint8_t len)
 {
   const uint8_t* current = reinterpret_cast<const uint8_t*>(buf);
 
-  uint8_t data_len = rf24_min(len,32);
+  uint8_t data_len = rf24_min(len,RF24_MAX_PAYLOAD);
 
   #if defined (RF24_LINUX)
     csn(LOW);

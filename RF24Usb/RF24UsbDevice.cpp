@@ -117,18 +117,18 @@ void RF24UsbDevice::update(void)
     if (command_to_execute)
     {
         command_to_execute = 0;
-        rf24usb.parse(IPAR, buffer);
+        rf24usb.parse(IPAR, buffer+1);
         rf24usb.executeCommand();
-        rf24usb.store(OPAR, buffer+1, &buff_size);
-        buffer[0] = buff_size++;
+        rf24usb.store(OPAR, buffer+2, &buff_size);
+        buffer[1] = buffer[0]; // command index
+        buffer[0] = buff_size+2; // size
+        buff_size += 2;
         buff_pos = 0;
         bytes_to_write = 8;
 
         while (bytes_to_write == 8)
         {
             usbPoll();
-            if (command_to_execute)
-                return;
             if(usbInterruptIsReady()){               // only if previous data was sent
                 bytes_to_write = ((buff_size - buff_pos)>8)?8:(buff_size - buff_pos);
                 usbSetInterrupt(buffer+buff_pos, bytes_to_write);
@@ -137,10 +137,6 @@ void RF24UsbDevice::update(void)
         }
     }
 }
-
-
-
-
 
 
 /* ------------------------------------------------------------------------- */
@@ -155,35 +151,23 @@ extern "C"{
 usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
     usbRequest_t *rq = (usbRequest_t *)data;
-    if (rq->bRequest != 250)
+
+    if (rq->bRequest == USB_CMD_VERSIONCHECK) // version check
     {
-        buffer[0] = rq->bRequest;
-        buffer[1] = rq->wValue.bytes[0];
-        buffer[2] = rq->wValue.bytes[1];
-        buffer[3] = rq->wIndex.bytes[0];
-        buffer[4] = rq->wIndex.bytes[1];
-        buffer[5] = 0;
-        buff_pos = 5;
+        buffer[0] = USB_PROTOCOL_VERSION;
+        usbMsgPtr = buffer;
+        return 1;
+    } else 
+    {
+        buffer[0] = rq->wIndex.bytes[0];
+        buffer[1] = rq->bRequest;
+        buff_pos = 1;
         buff_remaining = rq->wLength.word;
-    };
-    
-    if (rq->bmRequestType == 192) // USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN
-    {
-        command_to_execute = 1;
-        //rf24usb.parse(IPAR, buffer);
-        //rf24usb.executeCommand();
-        //rf24usb.store(OPAR, buffer, &buff_size);
-        //usbMsgPtr = (uchar *)buffer;
-        //return buff_size;
-        return 0;
-    } else // long input
-    {
+   
         if (buff_remaining > sizeof(buffer)) // limit to buffer size
             buff_remaining = sizeof(buffer);
         return USB_NO_MSG; 
     }
-      
-    return 0; /* default for not implemented requests: return no data back to host */
 }
 
 uchar usbFunctionWrite(uchar *data, uchar len)
@@ -197,6 +181,8 @@ uchar usbFunctionWrite(uchar *data, uchar len)
     for (i=0; i<len; i++)
         buffer[buff_pos++] = data[i];
 
+    if (buff_remaining == 0)
+        command_to_execute = 1;
     return buff_remaining == 0;
 }
 
