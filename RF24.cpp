@@ -11,16 +11,6 @@
 #include "RF24.h"
 #include <util/delay.h>
 
-#if defined(AVR) && !defined(ARDUINO)
-    #define delay(ms) _delay_ms(ms)
-    #define delayMicroseconds(us) _delay_us(us)
-    #define NO_MILLIS
-#endif
-
-#if defined(NO_MILLIS)
-    #define MILLIS_INTERVAL 10
-#endif
-
 #define NRF_TIMEOUT 85
 
 void RF24::csn(bool mode)
@@ -388,22 +378,27 @@ bool RF24::waitForFIFO(bool reuse, int8_t timeout, void (*poll)(void))
                     return 0;        //If this payload has exceeded the user-defined timeout, exit and return 0
                 }
                 #if defined(NO_MILLIS)
-                    _delay_ms(MILLIS_INTERVAL);
+                    delay(MILLIS_INTERVAL);
                     mls+=MILLIS_INTERVAL;
                 #endif
             } else
                 return 0;
         };
         #if defined (FAILURE_HANDLING) || defined (RF24_LINUX)
+            #if defined(NO_MILLIS)
             if(mls > (timeout+NRF_TIMEOUT) ){
-//            if(millis() - timer > (timeout+NRF_TIMEOUT) ){
+            #else
+            if(millis() - timer > (timeout+NRF_TIMEOUT) ){
+            #endif
                 errNotify();
                 #if defined (FAILURE_HANDLING)
                 return 0;
                 #endif
             };
-            _delay_ms(MILLIS_INTERVAL);
-            mls+=MILLIS_INTERVAL;
+            #if defined(NO_MILLIS)
+                delay(MILLIS_INTERVAL);
+                mls+=MILLIS_INTERVAL;
+            #endif
         #endif
         if (poll)
             poll();
@@ -437,7 +432,7 @@ bool RF24::waitForTransfer(void (*poll)(void))
                 #endif
 			}
             #if defined (NO_MILLIS)
-                _delay_ms(MILLIS_INTERVAL);
+                delay(MILLIS_INTERVAL);
                 mls+=MILLIS_INTERVAL;
             #endif
 		#endif
@@ -473,11 +468,17 @@ bool RF24::txStandByPoll(uint32_t timeout, void (*poll)(void))
                                 ce(LOW);     //Set re-transmit
                                 if (timeout) {
                                     ce(HIGH);
+                                    #if defined (NO_MILLIS)
                                     if(mls >= timeout) {
+                                    #else
+                                    if((millis() - timer) >= timeout)
+                                    #endif
                                         ce(LOW); flush_tx(); return 0;
                                     }
-                                    _delay_ms(MILLIS_INTERVAL);
-                                    mls += MILLIS_INTERVAL;
+                                    #if defined (NO_MILLIS)
+                                        delay(MILLIS_INTERVAL);
+                                        mls += MILLIS_INTERVAL;
+                                    #endif
                                 } else {
                                     flush_tx(); return 0;
                                 }
@@ -494,7 +495,7 @@ bool RF24::txStandByPoll(uint32_t timeout, void (*poll)(void))
                                 #endif
                         }
                         #if defined(NO_MILLIS)
-                            _delay_ms(MILLIS_INTERVAL);
+                            delay(MILLIS_INTERVAL);
                             mls += MILLIS_INTERVAL;
                         #endif
                 #endif
