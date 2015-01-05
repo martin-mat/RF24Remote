@@ -68,8 +68,7 @@ private:
   bool dynamic_payloads_enabled; /**< Whether dynamic payloads are enabled. */
   uint8_t pipe0_reading_address[5]; /**< Last address set on pipe 0 for reading. */
   uint8_t addr_width; /**< The address width to use - 3,4 or 5 bytes. */
-
-
+  uint32_t txRxDelay; /**< Var for adjusting delays depending on datarate */
   
 public:
 
@@ -1088,7 +1087,7 @@ private:
 
   uint8_t spiTrans(uint8_t cmd);
   
-  #if defined (FAILURE_HANDLING)
+  #if defined (FAILURE_HANDLING) || defined (RF24_LINUX)
 	void errNotify(void);
   #endif
   
