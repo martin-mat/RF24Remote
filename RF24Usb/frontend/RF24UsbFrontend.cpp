@@ -1,13 +1,37 @@
 #include <stdio.h>
 #include <usb.h>
+#include <time.h>
 #include "usbconfig.h"
 #include "opendevice.h"
-//#define DEBUG printf
-#define DEBUG(args ...)
+#define DEBUG printf
+//#define DEBUG(args ...)
 #include "RF24UsbFrontend.h"
 #include "nRF24L01.h"
 #define USB_TIMEOUT 100
 
+
+static const char * const rf24_datarate_str[] = {
+    "1MBPS",
+    "2MBPS",
+    "250KBPS",
+};
+
+static const char * const rf24_model_str[] = {
+    "nRF24L01",
+    "nRF24L01+",
+};
+
+static const char * const rf24_crclength_str[] = {
+    "Disabled",
+    "8 bits",
+    "16 bits",
+};
+static const char * const rf24_pa_dbm_str[] = {
+    "PA_MIN",
+    "PA_LOW",
+    "PA_HIGH",
+    "PA_MAX",
+};
 
 RF24::RF24(uint8_t _cepin, uint8_t _cspin)
 {
@@ -16,13 +40,22 @@ RF24::RF24(uint8_t _cepin, uint8_t _cspin)
 /*********************************************************************
 **            RF24 methods override for calls from USB frontend     **
 **********************************************************************/ 
+unsigned long millisd(void)
+{
+    struct timeval tm;
+    gettimeofday(&tm, NULL);
+    return (tm.tv_sec * 1000) + (tm.tv_usec / 1000);
+}
 
 void RF24UsbFrontend::callUsb(ERF24Command cmd)
 {
     uint8_t ln;
-    char buffer[128];
-    char *buf_to_send;
+    uint8_t buffer[128];
+    uint8_t *buf_to_send;
     int ret;
+    uint8_t i;
+    uint8_t buff_pos;
+    unsigned long ms;
 
     uint16_t lValue;
     uint16_t lIndex;
@@ -31,36 +64,59 @@ void RF24UsbFrontend::callUsb(ERF24Command cmd)
 
     command = cmd;
     store(IPAR, buffer, &ln);
-    DEBUG("callUsb:%d, len=%d\n", cmd, ln);
+    DEBUG("callUsb:%d, len=%d, ", cmd, ln);
+    for (i=0; i<ln; i++)
+        DEBUG("%02x ", buffer[i]);
+    DEBUG("\n");
 
     lValue = buffer[1] + (buffer[2]<<8);
     lIndex = buffer[3] + (buffer[4]<<8);
+    DEBUG("buff34=%04x\n",  buffer[3] + (buffer[4]<<8));
     if (ln<=6)   /* short input data, handle everything in one shot */
     {
         ln = 0;
         DEBUG("callUsb short\n");
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, command, lValue, lIndex, buffer, 256, USB_TIMEOUT);
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, command, lValue, lIndex, (char *)buffer, 256, USB_TIMEOUT);
         DEBUG("usb_control_device ret:%d\n", ret);
         if (ret<0)
-            fprintf(stderr, "usb_control short sending usb data failed\n");
+            fprintf(stderr, "usb_control short sending usb data failed:%d %s\n", ret, usb_strerror());
    } else {
         buf_to_send = buffer + 5;
         ln -= 5;
         DEBUG("callUsb long1\n");
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, command, lValue, lIndex, buf_to_send, ln, USB_TIMEOUT);
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_OUT, command, lValue, lIndex, (char *)buf_to_send, ln, USB_TIMEOUT);
         DEBUG("usb_control_device ret:%d\n", ret);
         if (ret<0)
-            fprintf(stderr, "usb_control long 1 sending usb data failed\n");
+            fprintf(stderr, "usb_control long 1 sending usb data failed:%d\n", ret);
         DEBUG("callUsb long2\n");
-        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 250, lValue, lIndex, buffer, 256, USB_TIMEOUT);
+        ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, 250, lValue, lIndex, (char *)buffer, 256, USB_TIMEOUT);
         DEBUG("usb_control_device ret:%d\n", ret);
         if (ret<0)
-            fprintf(stderr, "usb_control long 2 sending usb data failed\n");
+            fprintf(stderr, "usb_control long 2 sending usb data failed:%d '%s'\n", ret, usb_strerror());
     }
 
+    do
+    {
+    DEBUG("callUsb expecting data from driver, command %d\n", command);
+    buff_pos = 0;
+    ms = millisd();
+    do
+    {
+        ret = usb_interrupt_read(handle, USB_ENDPOINT_IN | 1, (char *)buffer + buff_pos, sizeof(buffer), 2000);
+        DEBUG("callUsb usb_interrupt_read:%d, together:%d\n", ret, buffer[0]);
+        if (ret>0)
+        {
+            buff_pos += ret;
+        }
+    } while ((buff_pos <= buffer[0]) && (ret > 0));
+    if (ret<0)
+        fprintf(stderr, "usb_interrupt_read failed:%d '%s'\n", ret, usb_strerror());
+    DEBUG("callUsb usb_interrupt_read took %lu ms\n", millisd() - ms);
+    DEBUG("received reply to command:%d\n", buffer[1]);
+    } while (buffer[1] != command);
 
     DEBUG("callUsb parsing results\n");
-    parse(OPAR, buffer);
+    parse(OPAR, buffer+1);
 }
 
 void RF24UsbFrontend::begin(void)
@@ -133,13 +189,15 @@ void RF24UsbFrontend::openReadingPipe(uint8_t number, const uint8_t *address)
 
 void RF24UsbFrontend::printDetails(void)
 {
-    char *str;
+    uint8_t *str;
     uint8_t status;
     uint8_t aw;
     uint8_t i;
+    uint8_t dr;
+    rf24_datarate_e rate;
 
     callUsb(RF24_printDetails);
-    str = p_buf[OPAR];
+    str = (uint8_t *)p_buf[OPAR];
 
     status = str[0];
     printf("STATUS\t\t = 0x%02x RX_DR=%x TX_DS=%x MAX_RT=%x RX_P_NO=%x TX_FULL=%x\r\n",
@@ -150,21 +208,55 @@ void RF24UsbFrontend::printDetails(void)
            ((status >> RX_P_NO) & 0b111),
            (status & _BV(TX_FULL))?1:0
           );
-    aw = str[SETUP_AW+1]+3;
+    aw = str[SETUP_AW+1]+2;
     printf("Addr width\t = %d\n", aw);
-    printf("RX_ADDR_P0-1\t = ");
-    for (i=0; i < aw; i++)
-        printf("%02x", str[RX_ADDR_P0+i+1]);
-    printf(" ");
-    for (i=0; i < aw; i++)
-        printf("%02x ", str[RX_ADDR_P1+i+1+aw]);
+    printf("RX_ADDR_P0-1\t = 0x");
+    for (i=aw; i > 0; i--)
+        printf("%02x", str[RX_ADDR_P0+i]);
+    printf(" 0x");
+    for (i=aw; i >0; i--)
+        printf("%02x", str[RX_ADDR_P1+i+aw-1]);
     printf("\n");
     printf("RX_ADDR_P2-5\t = ");
     for (i=0; i<4; i++)
-        printf("%02x ", str[RX_ADDR_P2 + 2*aw + 1 + i]);
-    printf("TX_ADDR\t = ");
-    for (i=0; i < aw; i++)
-        printf("%02x", str[TX_ADDR + 2*aw + 1 + i]);
+        printf("0x%02x ", str[RX_ADDR_P2 + 2*(aw-1) + 1 + i]);
+    printf("\n");
+    printf("TX_ADDR\t\t = 0x");
+    for (i=aw; i > 0 ; i--)
+        printf("%02x", str[TX_ADDR + 2*(aw-1) + i]);
+    printf("\n");
+    printf("RX_PW_P0-6\t = ");
+    for (i=0; i<6; i++)
+        printf("0x%02x ", str[RX_PW_P0 + 3*(aw-1) + 1 + i]);
+    printf("\n");
+    printf("EN_AA\t\t = 0x%02x\n", str[EN_AA + 1]);
+    printf("EN_RXADDR\t = 0x%02x\n", str[EN_RXADDR + 1]);
+    printf("RF_CH\t\t = 0x%02x\n", str[RF_CH + 1]);
+    printf("RF_SETUP\t = 0x%02x\n", str[RF_SETUP + 1]);
+    printf("CONFIG\t = 0x%02x\n", str[CONFIG + 1]);
+    printf("DYNPD/FEATURE\t = 0x%02x 0x%02x\n", str[DYNPD + 1 + 3*(aw-1) + 4], str[FEATURE + 1 + 3*(aw-1) + 4]);
+    dr = str[RF_SETUP + 1]  & (_BV(RF_DR_LOW) | _BV(RF_DR_HIGH));
+    if ( dr == _BV(RF_DR_LOW) )
+    {
+        // '10' = 250KBPS
+        rate = RF24_250KBPS ;
+    }
+    else if ( dr == _BV(RF_DR_HIGH) )
+    {
+        // '01' = 2MBPS
+        rate = RF24_2MBPS ;
+    }
+    else
+    {
+        // '00' = 1MBPS
+        rate = RF24_1MBPS ;
+    }
+
+    printf("Data rate\t = %s\n", rf24_datarate_str[rate]);
+    printf("Model\t = ");
+    printf("CRC Length\t = ");
+    printf("Model\t = ");
+    printf("PA Power\t = ");
     
 }
 
@@ -427,7 +519,7 @@ rf24_datarate_e RF24UsbFrontend::getDataRate(void)
 void RF24UsbFrontend::setCRCLength(rf24_crclength_e length)
 {
     p_uint8[IPAR][0] = (uint8_t)length;
-    callUsb(RF24_setDataRate);
+    callUsb(RF24_setCRCLength);
 }
 
 rf24_crclength_e RF24UsbFrontend::getCRCLength(void)

@@ -8,7 +8,7 @@
 //#endif
 
 #define MAX_PARAMS_TYPE 3
-#define MAX_BUFF 32
+#define MAX_BUFF 64
 #define MAX_PARAMS 4
 
 #define IPAR 0
@@ -38,6 +38,7 @@ typedef enum
     RF24_openWritingPipe,
     RF24_openWritingPipe40,
     RF24_openReadingPipe,
+
     RF24_openReadingPipe40,
     RF24_printDetails,
     RF24_rxFifoFull,
@@ -48,6 +49,7 @@ typedef enum
     RF24_writeBlocking, /* blocking */
     RF24_txStandBy, /* blocking */
     RF24_txStandByTimeout, /* blocking */
+
     RF24_writeAckPayload,
     RF24_enableDynamicAck,
     RF24_isAckPayloadAvailable,
@@ -58,6 +60,7 @@ typedef enum
     RF24_flush_tx,
     RF24_testCarrier,
     RF24_testRPD,
+
     RF24_isValid,
     RF24_maskIRQ,
     RF24_setAddressWidth,
@@ -68,6 +71,7 @@ typedef enum
     RF24_getPayloadSize,
     RF24_getDynamicPayloadSize,
     RF24_enableAckPayload,
+
     RF24_enableDynamicPayloads,
     RF24_isPVariant,
     RF24_setAutoAck,
@@ -90,8 +94,8 @@ class RF24Usb: public RF24
 {
 public:
     RF24Usb(void): RF24(4, 5) {};
-    int parse(int paramtype, const char *p);
-    int store(int paramtype, char *p, uint8_t *ln);
+    int parse(int paramtype, const uint8_t *p);
+    int store(int paramtype, uint8_t *p, uint8_t *ln);
     int executeCommand(void);
 
 protected:
@@ -101,7 +105,7 @@ protected:
     uint16_t p_uint16[2][MAX_PARAMS_TYPE];
     uint32_t p_uint32[2][MAX_PARAMS_TYPE];
     uint64_t p_uint64[2][MAX_PARAMS_TYPE];
-    char p_buf[2][MAX_BUFF];
+    uint8_t p_buf[2][MAX_BUFF];
     uint8_t p_buf_ln[2];
 };
 

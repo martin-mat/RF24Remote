@@ -68,8 +68,6 @@ private:
   bool dynamic_payloads_enabled; /**< Whether dynamic payloads are enabled. */
   uint8_t pipe0_reading_address[5]; /**< Last address set on pipe 0 for reading. */
   uint8_t addr_width; /**< The address width to use - 3,4 or 5 bytes. */
-  uint32_t lastAvailableCheck; /**< Limits the amount of time between reading data, only when switching between modes */
-  bool listeningStarted; /**< Var for delaying available() after start listening */
 
 
   
@@ -922,7 +920,11 @@ protected:
   bool waitForFIFO(bool reuse, int8_t timeout = 0, void (*poll)(void)=NULL);
   bool waitForTransfer(void (*poll)(void)=NULL);
   bool txStandByPoll(uint32_t timeout=0, void (*poll)(void)=NULL);
-  uint8_t dumpRegisters(char *str);
+  uint8_t dumpRegisters(uint8_t *str);
+  bool write( const void* buf, uint8_t len, const bool multicast, void (*poll)(void));
+  bool writeBlocking( const void* buf, uint8_t len, uint32_t timeout, void (*poll)(void) );
+  bool writeFast( const void* buf, uint8_t len, const bool multicast, void (*poll)(void) );
+  bool txStandBy(uint32_t timeout, void (*poll)(void));
 private:
 
   /**

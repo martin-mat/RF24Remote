@@ -9,8 +9,12 @@
 #include "nRF24L01.h"
 #include "RF24_config.h"
 #include "RF24.h"
+#include <util/delay.h>
 
-/****************************************************************************/
+#define delay(ms) _delay_ms(ms)
+#define delayMicroseconds(us) _delay_us(us)
+#define MILLIS_INTERVAL 10
+#define MICROS_INTERVAL 10
 
 void RF24::csn(bool mode)
 {
@@ -353,7 +357,8 @@ uint8_t RF24::read_payload(void* buf, uint8_t data_len)
 /****************************************************************************/
 bool RF24::waitForFIFO(bool reuse, int8_t timeout, void (*poll)(void))
 {
-    uint32_t timer = millis();                            //Get the time that the payload transmission started
+//    uint32_t timer = millis();                            //Get the time that the payload transmission started
+    uint32_t mls = 0;
 
     while( ( get_status()  & ( _BV(TX_FULL) ))) {         //Blocking only if FIFO is full. This will loop and block until TX is successful or timeout
 
@@ -363,17 +368,21 @@ bool RF24::waitForFIFO(bool reuse, int8_t timeout, void (*poll)(void))
             } else
                 write_register(STATUS,_BV(MAX_RT) );
             if (timeout) {
-                if(millis() - timer > timeout) {
+                if(mls > timeout) {
                     return 0;        //If this payload has exceeded the user-defined timeout, exit and return 0
                 }
+                _delay_ms(MILLIS_INTERVAL);
+                mls+=MILLIS_INTERVAL;
             } else
                 return 0;
         };
         #if defined (FAILURE_HANDLING)
-            if(millis() - timer > (timeout+75) ){
+            if(mls > (timeout+75) ){
                 errNotify();
                 return 0;
             };
+            _delay_ms(MILLIS_INTERVAL);
+            mls+=MILLIS_INTERVAL;
         #endif
         if (poll)
             poll();
@@ -385,15 +394,18 @@ bool RF24::waitForFIFO(bool reuse, int8_t timeout, void (*poll)(void))
 bool RF24::waitForTransfer(void (*poll)(void))
 {
 	#if defined (FAILURE_HANDLING)
-		uint32_t timer = millis();
+		//uint32_t timer = millis();
+        uint32_t mls;
 	#endif 
 
 	while( ! ( get_status()  & ( _BV(TX_DS) | _BV(MAX_RT) ))) { 
 		#if defined (FAILURE_HANDLING)
-			if(millis() - timer > 75){			
+			if(mls > 75){			
 				errNotify();
 				return 0;							
 			}
+            _delay_ms(MILLIS_INTERVAL);
+            mls+=MILLIS_INTERVAL;
 		#endif
         if (poll)
             poll();
@@ -414,7 +426,8 @@ bool RF24::waitForTransfer(void (*poll)(void))
 
 bool RF24::txStandByPoll(uint32_t timeout, void (*poll)(void))
 {
-        uint32_t start = millis();
+//       uint32_t start = millis();
+        uint32_t mls = 0;
 
         while( ! (read_register(FIFO_STATUS) & _BV(TX_EMPTY)) ){
                 if( get_status() & _BV(MAX_RT)){
@@ -422,18 +435,22 @@ bool RF24::txStandByPoll(uint32_t timeout, void (*poll)(void))
                                 ce(LOW);     //Set re-transmit
                                 if (timeout) {
                                     ce(HIGH);
-                                    if(millis() - start >= timeout) {
+                                    if(mls >= timeout) {
                                         ce(LOW); flush_tx(); return 0;
                                     }
+                                    _delay_ms(MILLIS_INTERVAL);
+                                    mls += MILLIS_INTERVAL;
                                 } else {
                                     flush_tx(); return 0;
                                 }
                 }
                 #if defined (FAILURE_HANDLING)
-                        if( millis() - start > (timeout+75)){
+                        if( mls > (timeout+75)){
                                 errNotify();
                                 return 0;       
                         }
+                        _delay_ms(MILLIS_INTERVAL);
+                        mls += 10;
                 #endif
                 if (poll)
                     poll();
@@ -704,24 +721,25 @@ void RF24::printDetails(void)
 
 }
 
-uint8_t RF24::dumpRegisters(char *str)
+uint8_t RF24::dumpRegisters(uint8_t *str)
 {
     uint8_t reg=0;
     uint8_t aw;
-    char *begin=str;
+    uint8_t *begin=str;
 
-    *str = getStatus(); str++;
+    *str = get_status(); str++;
     while (reg<=FEATURE)    // FEATURE is the last register
     {   
         // address registers read multiple bytes
         if ((reg == RX_ADDR_P0) || (reg == RX_ADDR_P1) || (reg == TX_ADDR))
         {
             read_register(reg, str, aw); str+=aw;  //aw was already read
+            reg++;
         } else
         {   
             *str = read_register(reg);
             if (reg == SETUP_AW)
-                aw = *str;
+                aw = *str+2;
             if (reg == FIFO_STATUS)   // gap from FIFO_STATUS to FYNPD
                 reg = DYNPD;
             else
@@ -734,6 +752,56 @@ uint8_t RF24::dumpRegisters(char *str)
 }   
 
 #endif
+
+bool RF24::write( const void* buf, uint8_t len, const bool multicast, void (*poll)(void) )
+{
+    //Start Writing
+    startFastWrite(buf,len,multicast);
+
+    return waitForTransfer(poll);
+}
+
+
+bool RF24::writeBlocking( const void* buf, uint8_t len, uint32_t timeout, void (*poll)(void) )
+{
+	//Block until the FIFO is NOT full.
+	//Keep track of the MAX retries and set auto-retry if seeing failures
+	//This way the FIFO will fill up and allow blocking until packets go through
+	//The radio will auto-clear everything in the FIFO as long as CE remains high
+
+    // wait for FIFO
+    if (!waitForFIFO(true, timeout, poll))
+        return 0;
+
+  	//Start Writing
+	startFastWrite(buf,len,0);								  //Write the payload if a buffer is clear
+
+	return 1;												  //Return 1 to indicate successful transmission
+}
+
+bool RF24::writeFast( const void* buf, uint8_t len, const bool multicast, void (*poll)(void) )
+{
+	//Block until the FIFO is NOT full.
+	//Keep track of the MAX retries and set auto-retry if seeing failures
+	//Return 0 so the user can control the retrys and set a timer or failure counter if required
+	//The radio will auto-clear everything in the FIFO as long as CE remains high
+
+    // wait for fifo
+    if (!waitForFIFO(false, 0, poll))
+        return 0;
+
+    //Start Writing
+	startFastWrite(buf,len,multicast);
+
+	return 1;
+}
+
+bool RF24::txStandBy(uint32_t timeout, void (*poll)(void))
+{
+    return txStandByPoll(timeout, poll);
+}
+
+
 /****************************************************************************/
 
 void RF24::begin(void)
@@ -862,8 +930,7 @@ void RF24::startListening(void)
   }
 
   // Go!
-  delayMicroseconds(100);
-  listeningStarted = 1;
+  //delayMicroseconds(100);
 }
 
 /****************************************************************************/
@@ -1097,29 +1164,19 @@ bool RF24::available(void)
 
 bool RF24::available(uint8_t* pipe_num)
 {
-    //Check the FIFO buffer to see if data is waiting to be read
-	    #if defined (RF24_LINUX)  || defined (__ARDUINO_X86__) // This seems to prevent faster devices like RPi from saturating the RF24 module with SPI requests
-		   while(millis() - lastAvailableCheck < 1){}
-		   lastAvailableCheck = millis();
-		#else
-	if(listeningStarted){	
-		while(micros() - lastAvailableCheck < 800 && listeningStarted){};
-		lastAvailableCheck = micros();		
-		listeningStarted = 0;
-	}
-	#endif
   if (!( read_register(FIFO_STATUS) & _BV(RX_EMPTY) )){
 
     // If the caller wants the pipe number, include that
     if ( pipe_num ){
-	  uint8_t status = get_status();
+      uint8_t status = get_status();
       *pipe_num = ( status >> RX_P_NO ) & 0b111;
-  	}
-  	return 1;
+    }
+    return 1;
   }
 
 
   return 0;
+
 
 
 }

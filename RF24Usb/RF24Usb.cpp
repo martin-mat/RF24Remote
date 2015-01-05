@@ -1,7 +1,7 @@
 #ifdef _USB_FRONTEND
     #include <stdio.h>
-    #define DEBUG(args ...)
-    //#define DEBUG printf
+    //#define DEBUG(args ...)
+    #define DEBUG printf
 #else
     #define DEBUG(args ...)
 #endif
@@ -19,7 +19,7 @@ const ERF24ParamType RF24Commands[][2][MAX_PARAMS]  =
     /*write*/ {{RF24_buff, RF24_uint8, RF24_none}, {RF24_bool, RF24_none}},
     /*writeMulticast*/ {{RF24_buff, RF24_uint8, RF24_bool, RF24_none}, {RF24_bool, RF24_none}},
     /*openWritingPipe*/ {{RF24_buff, RF24_none}, {RF24_none}},
-    /*openWritingPipe40*/ {{RF24_uint64, RF24_none}, {RF24_none}},
+    /*openWritingPipe40*/ {{RF24_uint64, RF24_none}, {RF24_uint64, RF24_none}},
     /*openReadingPipe*/ {{RF24_uint8, RF24_buff, RF24_none}, {RF24_none}},
     /*openReadingPipe40*/ {{RF24_uint8, RF24_uint64, RF24_none}, {RF24_none}},
     /*printDetails*/ {{RF24_none}, {RF24_buff, RF24_none}},
@@ -67,7 +67,7 @@ const ERF24ParamType RF24Commands[][2][MAX_PARAMS]  =
 };
 
 
-int RF24Usb::parse(int paramtype, const char *p)
+int RF24Usb::parse(int paramtype, const uint8_t *p)
 {
     uint8_t param_cnt_bool = 0;
     uint8_t param_cnt_uint8 = 0;
@@ -101,7 +101,7 @@ int RF24Usb::parse(int paramtype, const char *p)
     return 0;
 }
 
-int RF24Usb::store(int paramtype, char *p, uint8_t *ln)
+int RF24Usb::store(int paramtype, uint8_t *p, uint8_t *ln)
 {
     uint8_t param_cnt_bool = 0;
     uint8_t param_cnt_uint8 = 0;
@@ -109,7 +109,7 @@ int RF24Usb::store(int paramtype, char *p, uint8_t *ln)
     uint8_t param_cnt_uint32 = 0;
     uint8_t param_cnt_uint64 = 0;
     uint8_t cnt=0;
-    char *start = p;
+    uint8_t *start = p;
 
     DEBUG("Store Command:%d\n", command);
     
