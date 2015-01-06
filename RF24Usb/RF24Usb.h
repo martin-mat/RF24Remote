@@ -19,6 +19,15 @@
 #define IPAR 0
 #define OPAR 1
 
+#ifndef RF24_DEVICE_CEPIN
+    #define RF24_DEVICE_CEPIN 4
+#endif
+
+#ifndef RF24_DEVICE_CSPIN
+    #define RF24_DEVICE_CSPIN 5
+#endif
+
+
 typedef enum
 {
     RF24_none=0,
@@ -98,7 +107,7 @@ extern const ERF24ParamType RF24Commands[][2][MAX_PARAMS];
 class RF24Usb: public RF24
 {
 public:
-    RF24Usb(void): RF24(4, 5) {};
+    RF24Usb(void): RF24(RF24_DEVICE_CEPIN, RF24_DEVICE_CSPIN) {};
     int parse(int paramtype, const uint8_t *p);
     int store(int paramtype, uint8_t *p, uint8_t *ln);
     int executeCommand(void);

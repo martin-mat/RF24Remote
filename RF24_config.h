@@ -167,17 +167,6 @@
 
 #endif //Defined Linux 
 
-// pure AVR, no ARDUINO
-#if defined(AVR) && !defined(ARDUINO)
-    #define delay(ms) _delay_ms(ms)
-    #define delayMicroseconds(us) _delay_us(us)
-    #define NO_MILLIS
-#endif
-
-#if defined(NO_MILLIS)
-    #define MILLIS_INTERVAL 10
-#endif
-
 // ATTiny support code is from https://github.com/jscrane/RF24
 
 #if defined(RF24_TINY)

@@ -1,17 +1,17 @@
-#ifndef __RF24UsbFrontend__
-#define __RF24UsbFrontend__
+#ifndef __RF24Frontend__
+#define __RF24Frontend__
 
-#include <usb.h>
 #include "RF24Usb.h"
+#include "RF24Com.h"
 
-class RF24UsbFrontend: public RF24Usb
+class RF24Frontend: public RF24Usb
 {
 private:
-    usb_dev_handle *handle;
+    RF24Com &com_device;
     uint8_t request_nr;
 public:
-    RF24UsbFrontend(void);
-    int callUsb(ERF24Command cmd);
+    RF24Frontend(RF24Com &_dev):com_device(_dev) {};
+    int callRemote(ERF24Command cmd);
 
     void begin(void);
     void startListening(void);
@@ -69,5 +69,5 @@ public:
 };
 
 
-#endif //__RF24UsbFrontend__
+#endif //__RF24Frontend__
 
