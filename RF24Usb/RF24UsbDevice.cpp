@@ -161,7 +161,7 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
     {
         buffer[0] = rq->wIndex.bytes[0];
         buffer[1] = rq->bRequest;
-        buff_pos = 1;
+        buff_pos = 2;
         buff_remaining = rq->wLength.word;
    
         if (buff_remaining > sizeof(buffer)) // limit to buffer size

@@ -1,7 +1,7 @@
 #ifdef _USB_FRONTEND
     #include <stdio.h>
-    //#define DEBUG(args ...)
-    #define DEBUG printf
+    #define DEBUG(args ...)
+    //#define DEBUG printf
 #else
     #define DEBUG(args ...)
 #endif

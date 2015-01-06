@@ -4,8 +4,8 @@
 #include <stdarg.h>
 #include "usbconfig.h"
 #include "opendevice.h"
-#define DEBUG printf
-//#define DEBUG(args ...)
+//#define DEBUG printf
+#define DEBUG(args ...)
 #include "RF24UsbFrontend.h"
 #include "nRF24L01.h"
 #define USB_TIMEOUT 100
