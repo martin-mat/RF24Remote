@@ -73,7 +73,7 @@ int RF24Frontend::callRemote(ERF24Command cmd)
         DEBUG("%02x ", buffer[i+2]);
     DEBUG("\n");
 
-    buffer[0] = ln;
+    buffer[0] = ln+2;
     buffer[1] = request_nr;
     com_device.sendRequest(buffer);
 

@@ -19,7 +19,7 @@ CCFLAGS=
 
 # define all programs
 #PROGRAMS = scanner pingtest gettingstarted
-PROGRAMS = pingpair_dyn
+PROGRAMS = pingpair_dyn transfer
 SOURCES = ${PROGRAMS:=.cpp}
 
 all: ${PROGRAMS}
