@@ -7,7 +7,7 @@
  */
 
 #include "nRF24L01.h"
-#include "RF24_config.h"
+#include <RF24_config.h>
 #include "RF24.h"
 #include <util/delay.h>
 
@@ -420,7 +420,7 @@ bool RF24::waitForTransfer(void (*poll)(void))
 	while( ! ( get_status()  & ( _BV(TX_DS) | _BV(MAX_RT) ))) { 
 		#if defined (FAILURE_HANDLING) || defined (RF24_LINUX)
             #if defined(NO_MILLIS)
-            if(mls > NRF_TIMEOUT)
+            if(mls > NRF_TIMEOUT){
             #else
             if(millis() - timer > NRF_TIMEOUT){			
             #endif
@@ -487,7 +487,7 @@ bool RF24::txStandByPoll(uint32_t timeout, void (*poll)(void))
                     #if defined(NO_MILLIS)
                         if( mls > (timeout+NRF_TIMEOUT)){
                     #else
-                        if( millis() - start > (timeout+NRF_TIMEOUT)){
+                        if( millis() - timer > (timeout+NRF_TIMEOUT)){
                     #endif
                                 errNotify();
                                 #if defined (FAILURE_HANDLING)
