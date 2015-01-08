@@ -2,21 +2,30 @@
 #include <time.h>
 #include <stdarg.h>
 #include <termios.h> // POSIX terminal control definitions 
+#include <fcntl.h>
 #include "RF24Usb.h"
+#include <unistd.h>
 #define DEBUG printf
 //#define DEBUG(args ...)
 #include "RF24ComSerial.h"
 
+RF24ComSerial::RF24ComSerial(const char *ser_port)
+{
+    strncpy(sp, ser_port, 64);       
+}
+
+
 void RF24ComSerial::initialize(void)
 {
     struct termios toptions;
+    uint8_t buf[128];
     
-    fd = open(serialport, O_RDWR | O_NONBLOCK );
+    fd = open(sp, O_RDWR | O_NONBLOCK );
     if (fd == -1) 
-        fatal(-1, "serialport_init: Unable to open port ");
+        fatal(-1, "serialport_init: Unable to open port '%s'\n", sp);
 
     if (tcgetattr(fd, &toptions) < 0)
-        fatal(-1, "serialport_init: Couldn't get term attributes");
+        fatal(-1, "serialport_init: Couldn't get term attributes\n");
 
     speed_t brate = B115200;
 
@@ -40,50 +49,33 @@ void RF24ComSerial::initialize(void)
     //toptions.c_cc[VTIME] = 20;
     tcsetattr(fd, TCSANOW, &toptions);
     if( tcsetattr(fd, TCSAFLUSH, &toptions) < 0) 
-        fatal("init_serialport: Couldn't set term attributes");
+        fatal(-1, "init_serialport: Couldn't set term attributes\n");
 
+    buf[0] = 4;
+    buf[1] = 1;
+    buf[2] = 250;
+    buf[3] = 0;
+    sendRequest(buf);
+    getResponse(buf);
+    if ((buf[0] != 4) || (buf[2] != 1))
+        fatal(-1, "serialport: wrong protocol received from device version\n");
 
-    int ret;
-    uint8_t buffer[128];
-
-    usb_init();
-
-    vid = rawVid[1] * 256 + rawVid[0];
-    pid = rawPid[1] * 256 + rawPid[0];
-
-    if(usbOpenDevice(&handle, vid, vendor, pid, product, NULL, NULL, NULL) != 0)
-        fatal(-1, "Could not find USB device \"%s\" with vid=0x%x pid=0x%x\n", product, vid, pid);
-
-    // exmptiy thei interrupt queue
-    DEBUG("Emptying usb interrupt queue...");
-    ret = usb_interrupt_read(handle, USB_ENDPOINT_IN | 1, (char *)buffer, sizeof(buffer), 100);
-    DEBUG("done, returned %d.\n", ret);
-
-    DEBUG("Verifying protocol version\n");
-    ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, USB_CMD_VERSIONCHECK, 0, 0, (char *)buffer, sizeof(buffer), USB_TIMEOUT);
-    DEBUG("usb_control_msg ret:%d\n", ret);
-    if (ret != 1)
-        fatal(-1, "usb client returned unexpected reply on version check, ret=%d\n", ret);
-
-    if (buffer[0] != USB_PROTOCOL_VERSION)
-        fatal(-1, "usb client returned wrong protocol version. Expected:%d, received:%d\n", USB_PROTOCOL_VERSION, buffer[0]);
 }
 
 
 void RF24ComSerial::sendRequest(uint8_t *buffer)
 {
 
-    uint8_t len = str[0];
-    int n = write(fd, str, len);
+    uint8_t len = buffer[0];
+    int n = write(fd, buffer, len);
     if( n!=len )
         fatal(-1, "serialport_write: couldn't write whole string\n");
-    return 0;
+    return;
 }
 
 void RF24ComSerial::getResponse(uint8_t *buffer)
 {
     char b[1]; // read expects an array, so we give it a 1-byte array
-    int i=0;
     int tries = 2000;
     int n;
     do
@@ -104,25 +96,7 @@ void RF24ComSerial::getResponse(uint8_t *buffer)
     buffer[0] = b[0];
     read(fd, buffer+1, b[0]-1);
 
-    return 0;
-}
-    int ret;
-    uint8_t buff_pos;
-
-    buff_pos = 0;
-    do
-    {
-        ret = usb_interrupt_read(handle, USB_ENDPOINT_IN | 1, (char *)buffer + buff_pos, 256, USB_TIMEOUT);
-        DEBUG("callUsb usb_interrupt_read:%d, expected:%d\n", ret, buffer[0]);
-        if (ret>0)
-        {
-            buff_pos += ret;
-        }
-    } while ((buff_pos < buffer[0]) && (ret > 0));
-
-    if (ret<0)
-        fatal(-1, "usb_interrupt_read failed:%d '%s'\n", ret, usb_strerror());
-
+    return;
 }
 
 

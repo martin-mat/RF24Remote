@@ -14,6 +14,7 @@
 #include <string>
 #include <time.h>
 #include <unistd.h>
+#include "RF24ComSerial.h"
 #include "RF24ComUsb.h"
 #include "RF24Frontend.h"
 
@@ -36,7 +37,8 @@ using namespace std;
 
 // Setup for GPIO 22 CE and CE0 CSN with SPI Speed @ 8Mhz
 RF24ComUsb rf24_usbdev;
-RF24Frontend radio(rf24_usbdev);
+RF24ComSerial rf24_serialdev("/dev/tty0");
+RF24Frontend radio(rf24_serialdev);
 
 #undef millis
 unsigned long millis(void)

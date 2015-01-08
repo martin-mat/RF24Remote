@@ -1,7 +1,7 @@
 #ifndef _RF24COMSERIAL_I
 #define _RF24COMSERIAL_I
 
-#include "RF24Com"
+#include "RF24Com.h"
 
 class RF24ComSerial: public RF24Com
 {
