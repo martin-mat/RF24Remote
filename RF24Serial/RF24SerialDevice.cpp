@@ -1,14 +1,6 @@
+#include "Arduino.h"
 #include "RF24Usb.h"
-
-#ifdef __cplusplus
-extern "C"{
-#endif
-#include "usbdrv.h"
-#ifdef __cplusplus
-} // extern "C"
-#endif
-
-#include "RF24UsbDevice.h"
+#include "RF24SerialDevice.h"
 
 uint8_t buffer[256];
 uint8_t buff_pos;
@@ -16,13 +8,14 @@ uint8_t buff_remaining;
 uint8_t buff_size;
 uint8_t command_to_execute;
 
-RF24UsbDevice rf24usb;
+RF24SerialDevice rf24serial;
 
-RF24UsbDevice::RF24UsbDevice(void)
+RF24SerialDevice::RF24SerialDevice(void)
 {
+    serial = NULL;
 };
 
-int RF24UsbDevice::executeCommand(void)
+int RF24SerialDevice::executeCommand(void)
 {
     switch (command)
     {
@@ -32,8 +25,8 @@ int RF24UsbDevice::executeCommand(void)
         case RF24_available: p_bool[OPAR][0] = RF24::available(); break;
         case RF24_availablePipe: p_bool[OPAR][0] = RF24::available(&p_uint8[OPAR][0]); break;
         case RF24_read: RF24::read(p_buf[OPAR], p_uint8[IPAR][0]); p_buf_ln[OPAR]=p_uint8[IPAR][0]>RF24::getPayloadSize()?RF24::getPayloadSize():p_uint8[IPAR][0]; break;
-        case RF24_write: p_bool[OPAR][0] = RF24::write(p_buf[IPAR], p_uint8[IPAR][0], false, usbPoll); break;
-        case RF24_writeMulticast: p_bool[OPAR][0] = RF24::write(p_buf[IPAR], p_uint8[IPAR][0], p_bool[IPAR][0], usbPoll); break;
+        case RF24_write: p_bool[OPAR][0] = RF24::write(p_buf[IPAR], p_uint8[IPAR][0], false); break;
+        case RF24_writeMulticast: p_bool[OPAR][0] = RF24::write(p_buf[IPAR], p_uint8[IPAR][0], p_bool[IPAR][0]); break;
         case RF24_openWritingPipe: RF24::openWritingPipe((uint8_t *)p_buf[IPAR]); break;
         case RF24_openWritingPipe40: RF24::openWritingPipe(p_uint64[IPAR][0]); p_uint64[OPAR][0] = p_uint64[IPAR][0]; break;
         case RF24_openReadingPipe: RF24::openReadingPipe(p_uint8[IPAR][0], (uint8_t *)p_buf[IPAR]); break;
@@ -42,11 +35,11 @@ int RF24UsbDevice::executeCommand(void)
         case RF24_rxFifoFull: p_bool[OPAR][0] = RF24::rxFifoFull(); break;
         case RF24_powerDown: RF24::powerDown(); break;
         case RF24_powerUp: RF24::powerUp(); break;
-        case RF24_writeFast: p_bool[OPAR][0] = RF24::writeFast(p_buf[IPAR], p_uint8[IPAR][0], false, usbPoll); break;
-        case RF24_writeFastMulticast: p_bool[OPAR][0] = RF24::writeFast(p_buf[IPAR], p_uint8[IPAR][0], p_bool[IPAR][0], usbPoll); break;
-        case RF24_writeBlocking: p_bool[OPAR][0] = RF24::writeFast(p_buf[IPAR], p_uint8[IPAR][0], p_uint32[IPAR][0], usbPoll); break;
-        case RF24_txStandBy: p_bool[OPAR][0] = RF24::txStandBy(0, usbPoll); break;
-        case RF24_txStandByTimeout: p_bool[OPAR][0] = RF24::txStandBy(p_uint32[IPAR][0], usbPoll); break;
+        case RF24_writeFast: p_bool[OPAR][0] = RF24::writeFast(p_buf[IPAR], p_uint8[IPAR][0], false); break;
+        case RF24_writeFastMulticast: p_bool[OPAR][0] = RF24::writeFast(p_buf[IPAR], p_uint8[IPAR][0], p_bool[IPAR][0]); break;
+        case RF24_writeBlocking: p_bool[OPAR][0] = RF24::writeFast(p_buf[IPAR], p_uint8[IPAR][0], p_uint32[IPAR][0]); break;
+        case RF24_txStandBy: p_bool[OPAR][0] = RF24::txStandBy(0); break;
+        case RF24_txStandByTimeout: p_bool[OPAR][0] = RF24::txStandBy(p_uint32[IPAR][0]); break;
         case RF24_writeAckPayload: RF24::writeAckPayload(p_uint8[IPAR][0], p_buf[IPAR], p_uint8[IPAR][1]); break;
         case RF24_enableDynamicAck: RF24::enableDynamicAck(); break;
         case RF24_isAckPayloadAvailable: p_bool[OPAR][0] = RF24::isAckPayloadAvailable(); break;
@@ -84,111 +77,41 @@ int RF24UsbDevice::executeCommand(void)
 }
 
 
-void RF24UsbDevice::begin(void)
+void RF24SerialDevice::begin(HardwareSerial* _serial, int speed)
 {
     // disable timer 0 overflow interrupt (used for millis)
-    TIMSK0&=!(1<<TOIE0);
-
     buff_pos = 0;
     buff_remaining = 0;
     buff_size = 0;
     command_to_execute = 0;
 
-    cli();
-
-    usbInit();
-
-    usbDeviceDisconnect();
-    uchar   i;
-    i = 0;
-    while(--i){             /* fake USB disconnect for > 250 ms */
-        _delay_ms(1);
-    }
-    usbDeviceConnect();
-
-    sei();
-
+    serial = _serial;
+    serial->begin(speed);    
 }
 
-void RF24UsbDevice::update(void)
+void RF24SerialDevice::update(void)
 {
-    uint8_t bytes_to_write;
-    usbPoll();
-    if (command_to_execute)
+    if (serial == NULL)
+        return;
+
+    while (serial->available())
     {
-        command_to_execute = 0;
-        rf24usb.parse(IPAR, buffer+1);
-        rf24usb.executeCommand();
-        rf24usb.store(OPAR, buffer+2, &buff_size);
+        buffer[buff_pos++] = serial->read();
+        buff_size++;
+    }
+    
+    if (buff_size>2)
+    {
+        rf24serial.parse(IPAR, buffer+1);
+        rf24serial.executeCommand();
+        rf24serial.store(OPAR, buffer+2, &buff_size);
         buffer[1] = buffer[0]; // command index
         buffer[0] = buff_size+2; // size
-        buff_size += 2;
+        buff_size = 0;
         buff_pos = 0;
-        bytes_to_write = 8;
-
-        while (bytes_to_write == 8)
-        {
-            usbPoll();
-            if(usbInterruptIsReady()){               // only if previous data was sent
-                bytes_to_write = ((buff_size - buff_pos)>8)?8:(buff_size - buff_pos);
-                usbSetInterrupt(buffer+buff_pos, bytes_to_write);
-                buff_pos += bytes_to_write;
-            }
-        }
+        serial->write(buffer, buffer[0]);
+        serial->flush();
     }
 }
-
-
-/* ------------------------------------------------------------------------- */
-/* ----------------------------- USB interface ----------------------------- */
-/* ------------------------------------------------------------------------- */
-
-#ifdef __cplusplus
-extern "C"{
-#endif
-/* ------------------------------------------------------------------------- */
-
-usbMsgLen_t usbFunctionSetup(uchar data[8])
-{
-    usbRequest_t *rq = (usbRequest_t *)data;
-
-    if (rq->bRequest == USB_CMD_VERSIONCHECK) // version check
-    {
-        buffer[0] = USB_PROTOCOL_VERSION;
-        usbMsgPtr = buffer;
-        return 1;
-    } else 
-    {
-        buffer[0] = rq->wIndex.bytes[0];
-        buffer[1] = rq->bRequest;
-        buff_pos = 2;
-        buff_remaining = rq->wLength.word;
-   
-        if (buff_remaining > sizeof(buffer)) // limit to buffer size
-            buff_remaining = sizeof(buffer);
-        return USB_NO_MSG; 
-    }
-}
-
-uchar usbFunctionWrite(uchar *data, uchar len)
-{
-    uint8_t i;
-
-    if(len > buff_remaining)                // if this is the last incomplete chunk
-        len = buff_remaining;               // limit to the amount we can store
-    buff_remaining -= len;
-
-    for (i=0; i<len; i++)
-        buffer[buff_pos++] = data[i];
-
-    if (buff_remaining == 0)
-        command_to_execute = 1;
-    return buff_remaining == 0;
-}
-
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 
