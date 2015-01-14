@@ -23,19 +23,29 @@ See RF24Frontend/examples/*.cpp
 
 1. instantiate an interface driver:
 
+```
     RF24ComSerial rf24_serialdev("/dev/ttyACM0");
+```
 or
+```
     RF24ComVUsb rf24_vusbdev;
+```
 
 2. instantiate RF24Frontend, give the driver as a param:
 
+```
     RF24Frontend radio(rf24_serialdev);
+```
 or
+```
     RF24Frontend radio(rf24_vusbdev);
+```
 
 3. use the RF24Frontend instance the same way as RF243. use the RF24Frontend instance the same way as RF243. use the RF24Frontend instance the same way as RF243. use the RF24Frontend instance the same way as RF24
 
+```
     radio.begin();
     radio.setChannel(40);
     ...
     ...
+```
