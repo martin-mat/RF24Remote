@@ -21,7 +21,7 @@ for now no shared libraries, no installation.
 Full RF24 library interface is available via RF24Frontend class.
 See RF24Frontend/examples/*.cpp 
 
-1. instantiate an interface driver:
+* instantiate an interface driver:
 
 ```
     RF24ComSerial rf24_serialdev("/dev/ttyACM0");
