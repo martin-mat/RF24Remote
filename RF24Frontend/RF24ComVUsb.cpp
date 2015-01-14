@@ -7,11 +7,11 @@
 #include "RF24Remote.h"
 #define DEBUG printf
 //#define DEBUG(args ...)
-#include "RF24ComUsb.h"
+#include "RF24ComVUsb.h"
 
 #define USB_TIMEOUT 1000
 
-void RF24ComUsb::initialize(void)
+void RF24ComVUsb::initialize(void)
 {
     const unsigned char rawVid[2] = {USB_CFG_VENDOR_ID}, rawPid[2] = {USB_CFG_DEVICE_ID};
     char vendor[] = {USB_CFG_VENDOR_NAME, 0}, product[] = {USB_CFG_DEVICE_NAME, 0};
@@ -43,7 +43,7 @@ void RF24ComUsb::initialize(void)
 }
 
 
-void RF24ComUsb::sendRequest(uint8_t *buffer)
+void RF24ComVUsb::sendRequest(uint8_t *buffer)
 {
     int ret;
     uint16_t lValue;
@@ -59,7 +59,7 @@ void RF24ComUsb::sendRequest(uint8_t *buffer)
 }
 
 
-void RF24ComUsb::getResponse(uint8_t *buffer)
+void RF24ComVUsb::getResponse(uint8_t *buffer)
 {
     int ret;
     uint8_t buff_pos;

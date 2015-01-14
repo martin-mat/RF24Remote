@@ -16,7 +16,7 @@ TMRh20 2014
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "RF24ComUsb.h"
+#include "RF24ComVUsb.h"
 #include "RF24Frontend.h"
 
 
@@ -24,21 +24,9 @@ using namespace std;
 //
 // Hardware configuration
 //
-
-// CE Pin, CSN Pin, SPI Speed
-
-// Setup for GPIO 22 CE and CE1 CSN with SPI Speed @ 1Mhz
-//RF24 radio(RPI_V2_GPIO_P1_22, RPI_V2_GPIO_P1_26, BCM2835_SPI_SPEED_1MHZ);
-
-// Setup for GPIO 22 CE and CE0 CSN with SPI Speed @ 4Mhz
-//RF24 radio(RPI_V2_GPIO_P1_15, BCM2835_SPI_CS0, BCM2835_SPI_SPEED_4MHZ);
-
-// NEW: Setup for RPi B+
-//RF24 radio(RPI_BPLUS_GPIO_J8_15,RPI_BPLUS_GPIO_J8_24, BCM2835_SPI_SPEED_8MHZ);
-
-// Setup for GPIO 22 CE and CE0 CSN with SPI Speed @ 8Mhz
-RF24ComUsb dev_usb;
-RF24Frontend radio(dev_usb);
+// RF24ComSerial dev_serial("/dev/ttyACM0");
+RF24ComVUsb dev_vusb;
+RF24Frontend radio(dev_vusb);
 
 
 // Radio pipe addresses for the 2 nodes to communicate.
