@@ -3,12 +3,12 @@
 #include <stdarg.h>
 #include <termios.h> // POSIX terminal control definitions 
 #include <fcntl.h>
-#include "RF24Usb.h"
 #include <unistd.h>
 #include <stdio.h>
+#include "RF24Remote.h"
+#include "RF24ComSerial.h"
 #define DEBUG printf
 //#define DEBUG(args ...)
-#include "RF24ComSerial.h"
 
 RF24ComSerial::RF24ComSerial(const char *ser_port)
 {

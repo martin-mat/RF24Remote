@@ -104,13 +104,13 @@ typedef enum
 
 extern const ERF24ParamType RF24Commands[][2][MAX_PARAMS];
 
-class RF24Usb: public RF24
+class RF24Remote: public RF24
 {
 public:
-    RF24Usb(void): RF24(RF24_DEVICE_CEPIN, RF24_DEVICE_CSPIN) {};
+    RF24Remote(void): RF24(RF24_DEVICE_CEPIN, RF24_DEVICE_CSPIN) {};
     int parse(int paramtype, const uint8_t *p);
     int store(int paramtype, uint8_t *p, uint8_t *ln);
-    int executeCommand(void);
+    int executeCommand(void (*poll)(void) = NULL);
 
 protected:
     ERF24Command command;

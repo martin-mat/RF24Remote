@@ -4,7 +4,7 @@
 #include <stdarg.h>
 #include "usbconfig.h"
 #include "opendevice.h"
-#include "RF24Usb.h"
+#include "RF24Remote.h"
 #define DEBUG printf
 //#define DEBUG(args ...)
 #include "RF24ComUsb.h"

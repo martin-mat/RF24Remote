@@ -16,11 +16,8 @@ TMRh20 2014
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "RF24.h"
-#include "RF24Usb.h"
 #include "RF24ComUsb.h"
 #include "RF24Frontend.h"
-#include "RF24.h"
 
 
 using namespace std;

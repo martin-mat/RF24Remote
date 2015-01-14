@@ -72,8 +72,6 @@ int main(int argc, char** argv){
   radio.begin();
   radio.enableDynamicPayloads();
   radio.setRetries(5,15);
-  //radio.setRetries(0,3);
-  radio.printDetails();
 
 
 /********* Role chooser ***********/

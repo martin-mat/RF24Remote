@@ -1,10 +1,10 @@
 #ifndef __RF24Frontend__
 #define __RF24Frontend__
 
-#include "RF24Usb.h"
+#include "RF24Remote.h"
 #include "RF24Com.h"
 
-class RF24Frontend: public RF24Usb
+class RF24Frontend: public RF24Remote
 {
 private:
     RF24Com &com_device;

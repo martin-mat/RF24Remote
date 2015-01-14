@@ -1,5 +1,5 @@
 #include <SPI.h>
-#include <RF24SerialDevice.h>
+#include <RF24Serial.h>
 #include <RF24.h>
 
 void setup() {
