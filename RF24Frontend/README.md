@@ -25,9 +25,7 @@ See RF24Frontend/examples/*.cpp
 
 ```
     RF24ComSerial rf24_serialdev("/dev/ttyACM0");
-```
     or
-```
     RF24ComVUsb rf24_vusbdev;
 ```
 
@@ -35,13 +33,11 @@ See RF24Frontend/examples/*.cpp
 
 ```
     RF24Frontend radio(rf24_serialdev);
-```
     or
-```
     RF24Frontend radio(rf24_vusbdev);
 ```
 
-* use the RF24Frontend instance the same way as RF243. use the RF24Frontend instance the same way as RF243. use the RF24Frontend instance the same way as RF243. use the RF24Frontend instance the same way as RF24
+* use the RF24Frontend instance the same way as RF24:
 
 ```
     radio.begin();
