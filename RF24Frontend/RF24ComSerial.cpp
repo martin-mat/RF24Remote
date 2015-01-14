@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include "RF24Usb.h"
 #include <unistd.h>
+#include <stdio.h>
 #define DEBUG printf
 //#define DEBUG(args ...)
 #include "RF24ComSerial.h"
@@ -51,14 +52,15 @@ void RF24ComSerial::initialize(void)
     if( tcsetattr(fd, TCSAFLUSH, &toptions) < 0) 
         fatal(-1, "init_serialport: Couldn't set term attributes\n");
 
+    sleep(2); 
     buf[0] = 4;
     buf[1] = 1;
     buf[2] = 250;
     buf[3] = 0;
-    sendRequest(buf);
-    getResponse(buf);
-    if ((buf[0] != 4) || (buf[2] != 1))
-        fatal(-1, "serialport: wrong protocol received from device version\n");
+    //sendRequest(buf);
+    //getResponse(buf);
+    //if ((buf[0] != 4) || (buf[2] != 1))
+    //    fatal(-1, "serialport: wrong protocol received from device version\n");
 
 }
 
@@ -70,6 +72,7 @@ void RF24ComSerial::sendRequest(uint8_t *buffer)
     int n = write(fd, buffer, len);
     if( n!=len )
         fatal(-1, "serialport_write: couldn't write whole string\n");
+    //tcflush(fd, TCIOFLUSH); // clear buffer
     return;
 }
 
@@ -87,7 +90,7 @@ void RF24ComSerial::getResponse(uint8_t *buffer)
             usleep(1000); // wait 1 msec try again
             tries--;
         };
-    } while ((n==0) && (tries>0));
+    } while ((n==0) && (tries>0) || (b[0]<4));
     if (n==0)
         fatal(-1, "serial read did not get reply\n");
 

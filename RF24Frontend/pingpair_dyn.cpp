@@ -37,7 +37,7 @@ using namespace std;
 
 // Setup for GPIO 22 CE and CE0 CSN with SPI Speed @ 8Mhz
 RF24ComUsb rf24_usbdev;
-RF24ComSerial rf24_serialdev("/dev/tty0");
+RF24ComSerial rf24_serialdev("/dev/ttyACM3");
 RF24Frontend radio(rf24_serialdev);
 
 #undef millis

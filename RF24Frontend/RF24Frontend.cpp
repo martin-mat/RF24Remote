@@ -2,8 +2,8 @@
 #include <time.h>
 #include <stdarg.h>
 #include <stdlib.h>
-//#define DEBUG printf
-#define DEBUG(args ...)
+#define DEBUG printf
+//#define DEBUG(args ...)
 #include "RF24Frontend.h"
 #include "nRF24L01.h"
 #define USB_TIMEOUT 100
