@@ -22,9 +22,9 @@ Full RF24 library interface is available via RF24Frontend class.
 See RF24Frontend/examples/*.cpp 
 
 1. instantiate an interface driver:
-* for serial: RF24ComSerial rf24_serialdev("/dev/ttyACM0");
-* for VUsb: RF24ComVUsb rf24_vusbdev;
+** for serial: RF24ComSerial rf24_serialdev("/dev/ttyACM0");
+** for VUsb: RF24ComVUsb rf24_vusbdev;
 2. instantiate RF24Frontend, give the driver as a param:
-* for serial: RF24Frontend radio(rf24_serialdev);
-* for VUsb: RF24Frontend radio(rf24_vusbdev);
+** for serial: RF24Frontend radio(rf24_serialdev);
+** for VUsb: RF24Frontend radio(rf24_vusbdev);
 3. use the RF24Frontend instance the same way as RF243. use the RF24Frontend instance the same way as RF243. use the RF24Frontend instance the same way as RF243. use the RF24Frontend instance the same way as RF24
