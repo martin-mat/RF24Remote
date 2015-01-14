@@ -1,16 +1,17 @@
-#ifndef __RF24Dongle_H
-#define __RF24Dongle_H
+#ifndef __RF24Remote_H
+#define __RF24Remote_H
 
 #include "RF24.h"
+#include "RF24Remote_config.h"
 
 //#ifndef ARDUINO
 //#define PROGMEM
 //#endif
 
 // USB protocol version
-#define USB_PROTOCOL_VERSION 1
+#define RF24REMOTE_PROTOCOL_VERSION 1
 
-#define USB_CMD_VERSIONCHECK 250
+#define RF24REMOTE_CMD_VERSIONCHECK 250
 
 #define MAX_PARAMS_TYPE 3
 #define MAX_BUFF 64
@@ -18,15 +19,6 @@
 
 #define IPAR 0
 #define OPAR 1
-
-#ifndef RF24_DEVICE_CEPIN
-    #define RF24_DEVICE_CEPIN 4
-#endif
-
-#ifndef RF24_DEVICE_CSPIN
-    #define RF24_DEVICE_CSPIN 5
-#endif
-
 
 typedef enum
 {

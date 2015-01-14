@@ -33,13 +33,13 @@ void RF24ComVUsb::initialize(void)
     DEBUG("done, returned %d.\n", ret);
 
     DEBUG("Verifying protocol version\n");
-    ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, USB_CMD_VERSIONCHECK, 0, 0, (char *)buffer, sizeof(buffer), USB_TIMEOUT);
+    ret = usb_control_msg(handle, USB_TYPE_VENDOR | USB_RECIP_DEVICE | USB_ENDPOINT_IN, RF24REMOTE_CMD_VERSIONCHECK, 0, 0, (char *)buffer, sizeof(buffer), USB_TIMEOUT);
     DEBUG("usb_control_msg ret:%d\n", ret);
     if (ret != 1)
         fatal(-1, "usb client returned unexpected reply on version check, ret=%d\n", ret);
 
-    if (buffer[0] != USB_PROTOCOL_VERSION)
-        fatal(-1, "usb client returned wrong protocol version. Expected:%d, received:%d\n", USB_PROTOCOL_VERSION, buffer[0]);
+    if (buffer[0] != RF24REMOTE_PROTOCOL_VERSION)
+        fatal(-1, "usb client returned wrong protocol version. Expected:%d, received:%d\n", RF24REMOTE_PROTOCOL_VERSION, buffer[0]);
 }
 
 

@@ -203,6 +203,7 @@ int RF24Remote::executeCommand(void (*poll)(void))
         case RF24_setFailureDetected: RF24::failureDetected = p_bool[IPAR][0]; break;
     }
 #endif
+    return 0;
 }
 
 

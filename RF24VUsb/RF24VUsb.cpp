@@ -90,9 +90,9 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
     usbRequest_t *rq = (usbRequest_t *)data;
 
-    if (rq->bRequest == USB_CMD_VERSIONCHECK) // version check
+    if (rq->bRequest == RF24REMOTE_CMD_VERSIONCHECK) // version check
     {
-        buffer[0] = USB_PROTOCOL_VERSION;
+        buffer[0] = RF24REMOTE_PROTOCOL_VERSION;
         usbMsgPtr = buffer;
         return 1;
     } else 
