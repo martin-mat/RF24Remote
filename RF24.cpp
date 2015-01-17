@@ -410,9 +410,9 @@ bool RF24::waitForTransfer(void (*poll)(void))
 {
 	#if defined (FAILURE_HANDLING ) || defined (RF24_LINUX)
         #if defined (NO_MILLIS)
-		    uint32_t timer = millis();
+            uint32_t mls = 0;
         #else
-            uint32_t mls;
+		    uint32_t timer = millis();
         #endif
 	#endif 
 
@@ -456,7 +456,7 @@ bool RF24::txStandByPoll(uint32_t timeout, void (*poll)(void))
 {
     
         #if defined (NO_MILLIS)
-            uint32_t mls;
+            uint32_t mls = 0;
         #else
 		    uint32_t timer = millis();
         #endif

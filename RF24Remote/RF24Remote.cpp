@@ -84,7 +84,7 @@ int RF24Remote::parse(int paramtype, const uint8_t *p)
             case RF24_uint8: DPRINT("%d", *(uint8_t *)p); p_uint8[paramtype][param_cnt_uint8++] = *(uint8_t *)p++; break;
             case RF24_uint16: DPRINT("%d", *(uint16_t *)p); p_uint16[paramtype][param_cnt_uint16++] = *(uint16_t *)p; p+=2; break;
             case RF24_uint32: DPRINT("%d", *(uint32_t *)p); p_uint32[paramtype][param_cnt_uint32++] = *(uint32_t *)p; p+=4; break;
-            case RF24_uint64: DPRINT("%" PRIx64 "", *(uint64_t *)p);p_uint64[paramtype][param_cnt_uint64++] = *(uint64_t *)p; p+=8; break;
+            case RF24_uint64: DPRINT("%llx", *(uint64_t *)p);p_uint64[paramtype][param_cnt_uint64++] = *(uint64_t *)p; p+=8; break;
             case RF24_buff:
                 p_buf_ln[paramtype] = (uint8_t) *p++;
                 p_buf_ln[paramtype] = p_buf_ln[paramtype]>MAX_BUFF?MAX_BUFF:p_buf_ln[paramtype];
@@ -121,7 +121,7 @@ int RF24Remote::store(int paramtype, uint8_t *p, uint8_t *ln)
             case RF24_uint8: *((uint8_t *)p) = p_uint8[paramtype][param_cnt_uint8++]; DPRINT("%d", *(uint8_t *)p); p++; break;
             case RF24_uint16: *((uint16_t *)p) = p_uint16[paramtype][param_cnt_uint16++]; DPRINT("%d", *(uint16_t *)p); p+=2; break;
             case RF24_uint32: *((uint32_t *)p) = p_uint32[paramtype][param_cnt_uint32++]; DPRINT("%d", *(uint32_t *)p); p+=4; break;
-            case RF24_uint64: *((uint64_t *)p) = p_uint64[paramtype][param_cnt_uint64++]; DPRINT("%" PRIx64 "", *(uint64_t *)p); p+=8; break;
+            case RF24_uint64: *((uint64_t *)p) = p_uint64[paramtype][param_cnt_uint64++]; DPRINT("%llx", *(uint64_t *)p); p+=8; break;
             case RF24_buff:
                 DPRINT("%d", p_buf_ln[paramtype]);
                 *((uint8_t *)p) = p_buf_ln[paramtype]; p++;

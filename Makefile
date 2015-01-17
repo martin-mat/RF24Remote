@@ -27,7 +27,7 @@ HEADER_DIR=${PREFIX}/include/RF24
 DRIVER_DIR=RPi
 
 # The recommended compiler flags for the Raspberry Pi
-CCFLAGS=-Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s
+CCFLAGS=-Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -I. -mtune=arm1176jzf-s
 
 # make all
 # reinstall the library after each recompilation

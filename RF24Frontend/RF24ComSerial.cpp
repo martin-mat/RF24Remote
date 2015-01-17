@@ -41,6 +41,7 @@ void RF24ComSerial::initialize(void)
     toptions.c_cflag |= CREAD | CLOCAL; // turn on READ & ignore ctrl lines
     toptions.c_iflag &= ~(IXON | IXOFF | IXANY); // turn off s/w flow ctrl
     toptions.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); // make raw
+    toptions.c_iflag &= ~(INLCR | ICRNL);
     toptions.c_oflag &= ~OPOST; // make raw
     // see: http://unixwiz.net/techtips/termios-vmin-vtime.html
     toptions.c_cc[VMIN] = 0;
