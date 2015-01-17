@@ -57,6 +57,7 @@
 	  #define printf_P(...)
     #endif
   #endif
+
   
 #else //Everything else
 
@@ -92,6 +93,8 @@
 		#define _SPI SPI
 	  #endif
 	#endif
+
+
 #else
   #include <stdint.h>
   #include <stdio.h>

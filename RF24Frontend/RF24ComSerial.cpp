@@ -7,8 +7,6 @@
 #include <stdio.h>
 #include "RF24Remote.h"
 #include "RF24ComSerial.h"
-#define DEBUG printf
-//#define DEBUG(args ...)
 
 RF24ComSerial::RF24ComSerial(const char *ser_port)
 {
@@ -55,12 +53,12 @@ void RF24ComSerial::initialize(void)
     sleep(2); 
     buf[0] = 4;
     buf[1] = 1;
-    buf[2] = RF24REMOTE_CMD_VERSIONCHECK;
+    buf[2] = RF24_getProtocolVersion;
     buf[3] = 0;
     sendRequest(buf);
     getResponse(buf);
-    if ((buf[0] != 4) || (buf[2] != RF24REMOTE_PROTOCOL_VERSION))
-        fatal(-1, "serialport: wrong protocol received from device version\n");
+    if (buf[4] != RF24REMOTE_PROTOCOL_VERSION)
+        fatal(-1, "serialport: wrong protocol received from device version. Expected:%d, received:%d\n", RF24REMOTE_PROTOCOL_VERSION, buf[4]);
 
 }
 
@@ -69,6 +67,12 @@ void RF24ComSerial::sendRequest(uint8_t *buffer)
 {
 
     uint8_t len = buffer[0];
+    DPRINT("Sending:");
+    for (int i=0; i<len; i++)
+    {
+         DPRINT("%d ", buffer[i]);
+    }
+    DPRINT("\n");
     int n = write(fd, buffer, len);
     if( n!=len )
         fatal(-1, "serialport_write: couldn't write whole string\n");
@@ -76,16 +80,17 @@ void RF24ComSerial::sendRequest(uint8_t *buffer)
     return;
 }
 
-void RF24ComSerial::getResponse(uint8_t *buffer)
+
+uint8_t read_byte(int f)
 {
-    char b[1]; // read expects an array, so we give it a 1-byte array
+    uint8_t b[1]; // read expects an array, so we give it a 1-byte array
     int tries = 2000;
     int n;
     do
     {
-        n = read(fd, b, 1); // read a char at a time
-        if( n==-1)
-            fatal(-1, "serial read failed - 1st byte\n");
+        n = read(f, b, 1); // read a char at a time
+        if( n<0)
+            fatal(-1, "serial read failed\n");
         if( n==0 ) {
             usleep(1000); // wait 1 msec try again
             tries--;
@@ -94,10 +99,26 @@ void RF24ComSerial::getResponse(uint8_t *buffer)
     if (n==0)
         fatal(-1, "serial read did not get reply\n");
 
-    DEBUG("serial read length: %d\n",b[0]);
+    return b[0];
+}
 
-    buffer[0] = b[0];
-    read(fd, buffer+1, b[0]-1);
+void RF24ComSerial::getResponse(uint8_t *buffer)
+{
+    int i;
+
+    buffer[0] = read_byte(fd);
+    
+    DPRINT("serial read length: %d\n",buffer[0]);
+
+    for (i=1; i<buffer[0]; i++)
+        buffer[i] = read_byte(fd);
+
+    DPRINT("Received:");
+    for (int i=0; i<buffer[0]; i++)
+    {
+         DPRINT("%d ", buffer[i]);
+    }
+    DPRINT("\n");
 
     return;
 }

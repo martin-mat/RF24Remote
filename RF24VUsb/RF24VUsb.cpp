@@ -90,22 +90,14 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
     usbRequest_t *rq = (usbRequest_t *)data;
 
-    if (rq->bRequest == RF24REMOTE_CMD_VERSIONCHECK) // version check
-    {
-        buffer[0] = RF24REMOTE_PROTOCOL_VERSION;
-        usbMsgPtr = buffer;
-        return 1;
-    } else 
-    {
-        buffer[0] = rq->wIndex.bytes[0];
-        buffer[1] = rq->bRequest;
-        buff_pos = 2;
-        buff_remaining = rq->wLength.word;
+    buffer[0] = rq->wIndex.bytes[0];
+    buffer[1] = rq->bRequest;
+    buff_pos = 2;
+    buff_remaining = rq->wLength.word;
    
-        if (buff_remaining > sizeof(buffer)) // limit to buffer size
-            buff_remaining = sizeof(buffer);
-        return USB_NO_MSG; 
-    }
+    if (buff_remaining > sizeof(buffer)) // limit to buffer size
+        buff_remaining = sizeof(buffer);
+    return USB_NO_MSG; 
 }
 
 uchar usbFunctionWrite(uchar *data, uchar len)

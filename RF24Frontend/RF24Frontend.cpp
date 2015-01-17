@@ -2,8 +2,6 @@
 #include <time.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#define DEBUG printf
-//#define DEBUG(args ...)
 #include "RF24Frontend.h"
 #include "nRF24L01.h"
 #define USB_TIMEOUT 100
@@ -60,24 +58,25 @@ int RF24Frontend::callRemote(ERF24Command cmd)
 {
     uint8_t ln;
     uint8_t buffer[128];
-    unsigned long ms;
     uint8_t i;
 
-    ms = millisd();
-    DEBUG("\ncallRemote:%d\n", cmd);
+#if (DEBUG>0)
+    unsigned long ms = millisd();
+#endif
+    DPRINT("\ncallRemote:%d\n", cmd);
 
     command = cmd;
     store(IPAR, buffer+2, &ln);
-    DEBUG("callRemote:%d, len=%d, ", cmd, ln);
+    DPRINT("callRemote:%d, len=%d, ", cmd, ln);
     for (i=0; i<ln; i++)
-        DEBUG("%02x ", buffer[i+2]);
-    DEBUG("\n");
+        DPRINT("%02x ", buffer[i+2]);
+    DPRINT("\n");
 
     buffer[0] = ln+2;
     buffer[1] = request_nr;
     com_device.sendRequest(buffer);
 
-    DEBUG("callUsb expecting data from driver, command %d\n", command);
+    DPRINT("callUsb expecting data from driver, command %d\n", command);
     com_device.getResponse(buffer);
 
     if (buffer[1] != request_nr)
@@ -86,12 +85,12 @@ int RF24Frontend::callRemote(ERF24Command cmd)
     if (buffer[2] != command)
         fatal(-1, "getResponse returned wrong command. Expected:%d, obtained %d\n", command, buffer[2]);
 
-    DEBUG("received reply to command:%d\n", buffer[1]);
+    DPRINT("received reply to command:%d\n", buffer[1]);
 
-    DEBUG("callRemote parsing results\n");
+    DPRINT("callRemote parsing results\n");
     parse(OPAR, buffer+2);
     request_nr++;
-    DEBUG("callRemote took %lu ms\n", millisd() - ms);
+    DPRINT("callRemote took %lu ms\n", millisd() - ms);
     return 0;
 }
 
@@ -215,10 +214,12 @@ void RF24Frontend::printDetails(void)
     }
 
     printf("Data rate\t = %s\n", rf24_datarate_str[rate]);
+    /* TODO
     printf("Model\t = ");
     printf("CRC Length\t = ");
     printf("Model\t = ");
     printf("PA Power\t = ");
+    */
     
 }
 

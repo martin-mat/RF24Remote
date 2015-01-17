@@ -16,6 +16,9 @@ TMRh20 2014
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <time.h>
+#include <unistd.h>
+#include "RF24ComSerial.h"
 #include "RF24ComVUsb.h"
 #include "RF24Frontend.h"
 
@@ -24,7 +27,7 @@ using namespace std;
 //
 // Hardware configuration
 //
-// RF24ComSerial dev_serial("/dev/ttyACM0");
+//RF24ComSerial dev_serial("/dev/ttyACM2");
 RF24ComVUsb dev_vusb;
 RF24Frontend radio(dev_vusb);
 

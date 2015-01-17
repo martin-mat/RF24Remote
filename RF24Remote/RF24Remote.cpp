@@ -1,12 +1,8 @@
-#ifdef _USB_FRONTEND
+#ifdef _RF24_FRONTEND
     #include <stdio.h>
-    #define DEBUG(args ...)
-    //#define DEBUG printf
-#else
-    #define DEBUG(args ...)
+    #include <inttypes.h>
 #endif
 #include "RF24Remote.h"
-#define USB_TIMEOUT 500
 
 const ERF24ParamType RF24Commands[][2][MAX_PARAMS]  =
 {
@@ -19,7 +15,7 @@ const ERF24ParamType RF24Commands[][2][MAX_PARAMS]  =
     /*write*/ {{RF24_buff, RF24_uint8, RF24_none}, {RF24_bool, RF24_none}},
     /*writeMulticast*/ {{RF24_buff, RF24_uint8, RF24_bool, RF24_none}, {RF24_bool, RF24_none}},
     /*openWritingPipe*/ {{RF24_buff, RF24_none}, {RF24_none}},
-    /*openWritingPipe40*/ {{RF24_uint64, RF24_none}, {RF24_uint64, RF24_none}},
+    /*openWritingPipe40*/ {{RF24_uint64, RF24_none}, {RF24_none}},
     /*openReadingPipe*/ {{RF24_uint8, RF24_buff, RF24_none}, {RF24_none}},
     /*openReadingPipe40*/ {{RF24_uint8, RF24_uint64, RF24_none}, {RF24_none}},
     /*printDetails*/ {{RF24_none}, {RF24_buff, RF24_none}},
@@ -64,6 +60,7 @@ const ERF24ParamType RF24Commands[][2][MAX_PARAMS]  =
     /*disableCRC*/ {{RF24_none}, {RF24_none}},
     /*getFailureDetected*/ {{RF24_none}, {RF24_bool, RF24_none}},
     /*setFailureDetected*/ {{RF24_bool, RF24_none}, {RF24_none}},
+    /*getProtocolVersion*/ {{RF24_none}, {RF24_uint8, RF24_none}},
 };
 
 
@@ -77,26 +74,26 @@ int RF24Remote::parse(int paramtype, const uint8_t *p)
     ERF24ParamType param;
 
     command = (ERF24Command)*p++;
-    DEBUG("Parse Command:%d\n",command);
+    DPRINT("Parse Command:%d\n",command);
     while ((param = (ERF24ParamType)*p++) != RF24_none)
     {
-        DEBUG("Parse Param:%d, ",param);
+        DPRINT("Parse Param:%d, ",param);
         switch (param)
         {
-            case RF24_bool: DEBUG("%d", *(uint8_t *)p); p_bool[paramtype][param_cnt_bool++] = *(bool *)p++; break;
-            case RF24_uint8: DEBUG("%d", *(uint8_t *)p); p_uint8[paramtype][param_cnt_uint8++] = *(uint8_t *)p++; break;
-            case RF24_uint16: DEBUG("%d", *(uint16_t *)p); p_uint16[paramtype][param_cnt_uint16++] = *(uint16_t *)p; p+=2; break;
-            case RF24_uint32: DEBUG("%d", *(uint32_t *)p); p_uint32[paramtype][param_cnt_uint32++] = *(uint32_t *)p; p+=4; break;
-            case RF24_uint64: DEBUG("%llx", *(uint64_t *)p);p_uint64[paramtype][param_cnt_uint64++] = *(uint64_t *)p; p+=8; break;
+            case RF24_bool: DPRINT("%d", *(uint8_t *)p); p_bool[paramtype][param_cnt_bool++] = *(bool *)p++; break;
+            case RF24_uint8: DPRINT("%d", *(uint8_t *)p); p_uint8[paramtype][param_cnt_uint8++] = *(uint8_t *)p++; break;
+            case RF24_uint16: DPRINT("%d", *(uint16_t *)p); p_uint16[paramtype][param_cnt_uint16++] = *(uint16_t *)p; p+=2; break;
+            case RF24_uint32: DPRINT("%d", *(uint32_t *)p); p_uint32[paramtype][param_cnt_uint32++] = *(uint32_t *)p; p+=4; break;
+            case RF24_uint64: DPRINT("%" PRIx64 "", *(uint64_t *)p);p_uint64[paramtype][param_cnt_uint64++] = *(uint64_t *)p; p+=8; break;
             case RF24_buff:
                 p_buf_ln[paramtype] = (uint8_t) *p++;
                 p_buf_ln[paramtype] = p_buf_ln[paramtype]>MAX_BUFF?MAX_BUFF:p_buf_ln[paramtype];
                 memcpy(p_buf[paramtype], p, p_buf_ln[paramtype]); p+=p_buf_ln[paramtype];
-                DEBUG("%d", p_buf_ln[paramtype]);
+                DPRINT("%d", p_buf_ln[paramtype]);
                 break;
             case RF24_none: break;
         } 
-    DEBUG("\n");
+    DPRINT("\n");
     }
     return 0;
 }
@@ -111,40 +108,40 @@ int RF24Remote::store(int paramtype, uint8_t *p, uint8_t *ln)
     uint8_t cnt=0;
     uint8_t *start = p;
 
-    DEBUG("Store Command:%d\n", command);
+    DPRINT("Store Command:%d\n", command);
     
     *(ERF24Command *)p = command; p++;
     while ((*p = RF24Commands[command][paramtype][cnt]) != RF24_none)
     {
         cnt++;
-        DEBUG("Store Param:%d, ",*p);
+        DPRINT("Store Param:%d, ",*p);
         switch (*p++)
         {
-            case RF24_bool: *((bool *)p) = p_bool[paramtype][param_cnt_bool++]; DEBUG("%d", *(uint8_t *)p); p++; break;
-            case RF24_uint8: *((uint8_t *)p) = p_uint8[paramtype][param_cnt_uint8++]; DEBUG("%d", *(uint8_t *)p); p++; break;
-            case RF24_uint16: *((uint16_t *)p) = p_uint16[paramtype][param_cnt_uint16++]; DEBUG("%d", *(uint16_t *)p); p+=2; break;
-            case RF24_uint32: *((uint32_t *)p) = p_uint32[paramtype][param_cnt_uint32++]; DEBUG("%d", *(uint32_t *)p); p+=4; break;
-            case RF24_uint64: *((uint64_t *)p) = p_uint64[paramtype][param_cnt_uint64++]; DEBUG("%llx", *(uint64_t *)p); p+=8; break;
+            case RF24_bool: *((bool *)p) = p_bool[paramtype][param_cnt_bool++]; DPRINT("%d", *(uint8_t *)p); p++; break;
+            case RF24_uint8: *((uint8_t *)p) = p_uint8[paramtype][param_cnt_uint8++]; DPRINT("%d", *(uint8_t *)p); p++; break;
+            case RF24_uint16: *((uint16_t *)p) = p_uint16[paramtype][param_cnt_uint16++]; DPRINT("%d", *(uint16_t *)p); p+=2; break;
+            case RF24_uint32: *((uint32_t *)p) = p_uint32[paramtype][param_cnt_uint32++]; DPRINT("%d", *(uint32_t *)p); p+=4; break;
+            case RF24_uint64: *((uint64_t *)p) = p_uint64[paramtype][param_cnt_uint64++]; DPRINT("%" PRIx64 "", *(uint64_t *)p); p+=8; break;
             case RF24_buff:
-                DEBUG("%d", p_buf_ln[paramtype]);
+                DPRINT("%d", p_buf_ln[paramtype]);
                 *((uint8_t *)p) = p_buf_ln[paramtype]; p++;
                 memcpy(p, p_buf[paramtype], p_buf_ln[paramtype]); p+=p_buf_ln[paramtype];
                 break;
         }
-        DEBUG("\n");
+        DPRINT("\n");
     }
     p++;
     *ln = p - start;
-    DEBUG("Store ln:%d '" , *ln);
+    DPRINT("Store ln:%d '" , *ln);
     for (cnt=0; cnt<*ln; cnt++)
-        DEBUG("%02X ", start[cnt]);
-    DEBUG("'\n");
+        DPRINT("%02X ", start[cnt]);
+    DPRINT("'\n");
     return 0;
 }
 
 int RF24Remote::executeCommand(void (*poll)(void))
 {
-#ifndef _USB_FRONTEND
+#ifndef _RF24_FRONTEND
     switch (command)
     {
         case RF24_begin: RF24::begin(); break;
@@ -156,7 +153,7 @@ int RF24Remote::executeCommand(void (*poll)(void))
         case RF24_write: p_bool[OPAR][0] = RF24::write(p_buf[IPAR], p_uint8[IPAR][0], false, poll); break;
         case RF24_writeMulticast: p_bool[OPAR][0] = RF24::write(p_buf[IPAR], p_uint8[IPAR][0], p_bool[IPAR][0], poll); break;
         case RF24_openWritingPipe: RF24::openWritingPipe((uint8_t *)p_buf[IPAR]); break;
-        case RF24_openWritingPipe40: RF24::openWritingPipe(p_uint64[IPAR][0]); p_uint64[OPAR][0] = p_uint64[IPAR][0]; break;
+        case RF24_openWritingPipe40: RF24::openWritingPipe(p_uint64[IPAR][0]); break;
         case RF24_openReadingPipe: RF24::openReadingPipe(p_uint8[IPAR][0], (uint8_t *)p_buf[IPAR]); break;
         case RF24_openReadingPipe40: RF24::openReadingPipe(p_uint8[IPAR][0], p_uint64[IPAR][0]); break;
         case RF24_printDetails: p_buf_ln[OPAR]=RF24::dumpRegisters((uint8_t *)p_buf[OPAR]); break;
@@ -201,6 +198,7 @@ int RF24Remote::executeCommand(void (*poll)(void))
         case RF24_disableCRC: RF24::disableCRC(); break;
         case RF24_getFailureDetected: p_bool[OPAR][0] = RF24::failureDetected; break;
         case RF24_setFailureDetected: RF24::failureDetected = p_bool[IPAR][0]; break;
+        case RF24_getProtocolVersion: p_uint8[OPAR][0]=RF24REMOTE_PROTOCOL_VERSION; break;
     }
 #endif
     return 0;

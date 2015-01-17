@@ -24,8 +24,9 @@ using namespace std;
 // Hardware configuration
 //
 
-// RF24ComVUsb rf24_vusbdev;
- RF24ComSerial rf24_serialdev("/dev/ttyACM0");
+//RF24ComVUsb rf24_vusbdev;
+RF24ComSerial rf24_serialdev("/dev/ttyACM2");
+//RF24Frontend radio(rf24_vusbdev);
 RF24Frontend radio(rf24_serialdev);
 
 #undef millis

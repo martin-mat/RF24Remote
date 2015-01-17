@@ -4,14 +4,19 @@
 #include "RF24.h"
 #include "RF24Remote_config.h"
 
+#if ((DEBUG!=0) && defined(_RF24_FRONTEND))
+    #define DPRINT printf
+#else
+    #define DPRINT(...)
+#endif
+
 //#ifndef ARDUINO
 //#define PROGMEM
 //#endif
 
-// USB protocol version
+// protocol version
+// increase every time when the protocol changes
 #define RF24REMOTE_PROTOCOL_VERSION 1
-
-#define RF24REMOTE_CMD_VERSIONCHECK 250
 
 #define MAX_PARAMS_TYPE 3
 #define MAX_BUFF 64
@@ -88,9 +93,11 @@ typedef enum
     RF24_getDataRate,
     RF24_setCRCLength,
     RF24_getCRCLength,
+
     RF24_disableCRC,
     RF24_getFailureDetected,
     RF24_setFailureDetected,
+    RF24_getProtocolVersion,
 } ERF24Command;
 
 
