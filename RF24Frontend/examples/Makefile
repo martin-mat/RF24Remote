@@ -23,7 +23,7 @@ SOURCES = ${PROGRAMS:=.cpp}
 all: ${PROGRAMS}
 
 ${PROGRAMS}: ${SOURCES}
-	g++ ${CCFLAGS} -Wall -I. -I../ -I../.. -I../../RF24Remote -I../../RF24Serial -I../../RF24VUsb -D_RF24_FRONTEND $@.cpp ../RF24Frontend.cpp ../../RF24Remote/RF24Remote.cpp ../RF24ComVUsb.cpp ../RF24ComSerial.cpp ../opendevice.c -lusb -o $@
+	g++ ${CCFLAGS} -Wall -I. -I../ -I../../RF24Remote -I../../../RF24 -I../../RF24Serial -I../../RF24VUsb -D_RF24_FRONTEND $@.cpp ../RF24Frontend.cpp ../../RF24Remote/RF24Remote.cpp ../RF24ComVUsb.cpp ../RF24ComSerial.cpp ../opendevice.c -lusb -o $@
 
 clean:
 	rm -rf $(PROGRAMS)
