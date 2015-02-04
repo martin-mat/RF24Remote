@@ -10,10 +10,6 @@
     #define DPRINT(...)
 #endif
 
-//#ifndef ARDUINO
-//#define PROGMEM
-//#endif
-
 // protocol version
 // increase every time when the protocol changes
 #define RF24REMOTE_PROTOCOL_VERSION 1

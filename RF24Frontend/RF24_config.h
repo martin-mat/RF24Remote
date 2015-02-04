@@ -27,6 +27,7 @@
   #define rf24_min(a,b) (a<b?a:b)
   #define VIRTUAL virtual
   #define byte uint8_t
+  #undef __arm__
   
   #include <stdint.h>
   #include <stdio.h>
