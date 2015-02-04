@@ -40,10 +40,6 @@ void fatal(int retval, const char* format, ...)
 }
 
 
-RF24::RF24(uint8_t _cepin, uint8_t _cspin)
-{
-}
-
 /*********************************************************************
 **            RF24 methods override for calls from USB frontend     **
 **********************************************************************/ 
