@@ -7,7 +7,7 @@ class RF24VUsb: public RF24Remote
 private:
 public:
     RF24VUsb(void);
-    void begin(void);
+    void setup(void);
     void update(void);
 
     bool write( const void* buf, uint8_t len, const bool multicast );

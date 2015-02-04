@@ -15,7 +15,7 @@ RF24Serial::RF24Serial(void)
     serial = NULL;
 };
 
-void RF24Serial::begin(HardwareSerial* _serial, int speed)
+void RF24Serial::setup(HardwareSerial* _serial, int speed)
 {
     buff_pos = 0;
     buff_remaining = 0;

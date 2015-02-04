@@ -4,7 +4,7 @@
 #endif
 #include "RF24Remote.h"
 
-PROGMEM const ERF24ParamType RF24Commands[][2][MAX_PARAMS]  =
+const ERF24ParamType RF24Commands[][2][MAX_PARAMS] PROGMEM  =
 {
     /*begin*/ {{RF24_none}, {RF24_none}},
     /*startListening*/ {{RF24_none}, {RF24_none}},
@@ -111,7 +111,7 @@ int RF24Remote::store(int paramtype, uint8_t *p, uint8_t *ln)
     DPRINT("Store Command:%d\n", command);
     
     *(ERF24Command *)p = command; p++;
-    while ((*p = pgm_read_byte(RF24Commands[command][paramtype][cnt])) != RF24_none)
+    while ((*p = pgm_read_byte(&(RF24Commands[command][paramtype][cnt]))) != RF24_none)
     {
         cnt++;
         DPRINT("Store Param:%d, ",*p);

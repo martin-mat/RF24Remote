@@ -23,7 +23,7 @@ RF24VUsb::RF24VUsb(void)
 {
 };
 
-void RF24VUsb::begin(void)
+void RF24VUsb::setup(void)
 {
     // disable timer 0 overflow interrupt (used for millis)
     TIMSK0&=!(1<<TOIE0);

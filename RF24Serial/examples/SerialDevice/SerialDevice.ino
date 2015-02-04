@@ -5,7 +5,7 @@
 
 void setup() {
   // put your setup code here, to run once:
-  rf24serial.begin();
+  rf24serial.setup();
 }
 
 void loop() {

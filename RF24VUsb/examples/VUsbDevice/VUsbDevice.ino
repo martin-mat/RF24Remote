@@ -5,7 +5,7 @@
 
 void setup() {
   // put your setup code here, to run once:
-  rf24vusb.begin();
+  rf24vusb.setup();
 }
 
 void loop() {

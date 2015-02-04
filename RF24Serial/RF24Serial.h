@@ -8,7 +8,7 @@ private:
     HardwareSerial *serial;
 public:
     RF24Serial(void);
-    void begin(HardwareSerial *_serial=&Serial, int speed=115200);
+    void setup(HardwareSerial *_serial=&Serial, int speed=115200);
     void update(void);
 };
 
