@@ -82,7 +82,7 @@ void RF24VUsb::update(void)
 /* ----------------------------- RF24Remote overrides ---------------------- */
 /* ------------------------------------------------------------------------- */
 
-#define WRITE_LOOPS_PER_MS (30*(F_CPU/100000))
+#define WRITE_LOOPS_PER_MS (10*(F_CPU/1000000))
 bool RF24VUsb::write(const void* buf, uint8_t len, const bool multicast)
 {
     //Start Writing
@@ -111,7 +111,7 @@ bool RF24VUsb::write(const void* buf, uint8_t len, const bool multicast)
 }
 #undef WRITE_LOOPS_PER_MS
 
-#define WRITEFAST_LOOPS_PER_MS (30*(F_CPU/100000))
+#define WRITEFAST_LOOPS_PER_MS (10*(F_CPU/1000000))
 bool RF24VUsb::writeFast(const void* buf, uint8_t len, const bool multicast)
 {
     //Block until the FIFO is NOT full.
@@ -143,7 +143,7 @@ bool RF24VUsb::writeFast(const void* buf, uint8_t len, const bool multicast)
 }
 #undef WRITEFAST_LOOPS_PER_MS
 
-#define WRITEBLOCKING_LOOPS_PER_MS (30*(F_CPU/100000))
+#define WRITEBLOCKING_LOOPS_PER_MS (10*(F_CPU/1000000))
 bool RF24VUsb::writeBlocking(const void* buf, uint8_t len, uint32_t timeout)
 {
     //Block until the FIFO is NOT full.
@@ -175,7 +175,7 @@ bool RF24VUsb::writeBlocking(const void* buf, uint8_t len, uint32_t timeout)
 }
 #undef WRITEBLOCKING_LOOPS_PER_MS
 
-#define TX_STANDBY_LOOPS_PER_MS (30*(F_CPU/100000))
+#define TX_STANDBY_LOOPS_PER_MS (10*(F_CPU/1000000))
 bool RF24VUsb::txStandBy()
 {
     uint32_t timeout_counter = 0;
@@ -201,7 +201,7 @@ bool RF24VUsb::txStandBy()
 }
 #undef TX_STANDBY_LOOPS_PER_MS
 
-#define TX_STANDBYTIMEOUT_LOOPS_PER_MS (30*(F_CPU/10000))
+#define TX_STANDBYTIMEOUT_LOOPS_PER_MS (10*(F_CPU/1000000))
 bool RF24VUsb::txStandBy(uint32_t timeout, bool startTx)
 {
     if(startTx)
