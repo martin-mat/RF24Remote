@@ -144,6 +144,35 @@ void RF24Frontend::openReadingPipe(uint8_t number, const uint8_t *address)
     callRemote(RF24_openWritingPipe);
 }
 
+
+uint8_t *RF24Frontend::get_register_pnt(uint8_t *str, int code)
+{
+    uint8_t aw = str[SETUP_AW + 1];
+
+    if (code == 0)
+        return str;
+    else if (code <= RX_ADDR_P0)
+        return str+1+code;
+    else if (code == RX_ADDR_P1)
+        return str+1+(aw-1)+code;
+    else if (code <= TX_ADDR)
+        return str+1+2*(aw-1)+code;
+    else if (code <= FIFO_STATUS)
+        return str+1+3*(aw-1)+code;
+    else // (code < FEATURE)
+        return str+1+3*aw+(DYNPD-FIFO_STATUS-1)+code;
+}
+
+uint8_t RF24Frontend::read_register(uint8_t reg, uint8_t* buf, uint8_t len)
+{
+    memcpy(buf, get_register_pnt((uint8_t *)p_buf[OPAR], reg), len);
+}
+
+uint8_t RF24Frontend::read_register(uint8_t reg)
+{
+    return get_register_pnt((uint8_t *)p_buf[OPAR], reg); 
+}
+
 void RF24Frontend::printDetails(void)
 {
     uint8_t *str;
@@ -157,6 +186,10 @@ void RF24Frontend::printDetails(void)
     str = (uint8_t *)p_buf[OPAR];
 
     status = str[0];
+    print_status(status);
+    
+
+
     printf("STATUS\t\t = 0x%02x RX_DR=%x TX_DS=%x MAX_RT=%x RX_P_NO=%x TX_FULL=%x\r\n",
            status,
            (status & _BV(RX_DR))?1:0,

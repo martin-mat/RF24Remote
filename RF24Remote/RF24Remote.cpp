@@ -3,6 +3,7 @@
     #include <inttypes.h>
 #endif
 #include "RF24Remote.h"
+#include "nRF24L01.h"
 
 const ERF24ParamType RF24Commands[][2][MAX_PARAMS] PROGMEM  =
 {
@@ -156,7 +157,7 @@ int RF24Remote::executeCommand(void)
         case RF24_openWritingPipe40: openWritingPipe(p_uint64[IPAR][0]); break;
         case RF24_openReadingPipe: openReadingPipe(p_uint8[IPAR][0], (uint8_t *)p_buf[IPAR]); break;
         case RF24_openReadingPipe40: openReadingPipe(p_uint8[IPAR][0], p_uint64[IPAR][0]); break;
-        case RF24_printDetails: /* TODO p_buf_ln[OPAR]=dumpRegisters((uint8_t *)p_buf[OPAR]);*/ break;
+        case RF24_printDetails: p_buf_ln[OPAR]=dumpRegisters((uint8_t *)p_buf[OPAR]); break;
         case RF24_rxFifoFull: p_bool[OPAR][0] = rxFifoFull(); break;
         case RF24_powerDown: powerDown(); break;
         case RF24_powerUp: powerUp(); break;
@@ -204,5 +205,50 @@ int RF24Remote::executeCommand(void)
     return 0;
 }
 
+uint8_t RF24Remote::dumpRegisters(uint8_t *str)
+{
+    uint8_t reg=0;
+    uint8_t aw;
+    uint8_t *begin=str;
+    *str = get_status(); str++;
+    while (reg<=FEATURE) // FEATURE is the last register
+    {
+        // address registers read multiple bytes
+        if ((reg == RX_ADDR_P0) || (reg == RX_ADDR_P1) || (reg == TX_ADDR))
+        {
+            read_register(reg, str, aw); str+=aw; //aw was already read
+            reg++;
+        } else
+        {
+            *str = read_register(reg);
+            if (reg == SETUP_AW)
+                aw = *str+2;
+            if (reg == FIFO_STATUS) // gap from FIFO_STATUS to FYNPD
+                reg = DYNPD;
+            else
+                reg++;
+            str++;
+        }
+    }
+    return str-begin; // return length of dump
+} 
+
+uint8_t *get_register_pnt(uint8_t *str, int code)
+{
+    uint8_t aw = str[SETUP_AW + 1];
+
+    if (code == 0)
+        return str;
+    else if (code <= RX_ADDR_P0)
+        return str+1+code;
+    else if (code == RX_ADDR_P1)
+        return str+1+(aw-1)+code;
+    else if (code <= TX_ADDR)
+        return str+1+2*(aw-1)+code;
+    else if (code <= FIFO_STATUS)
+        return str+1+3*(aw-1)+code;
+    else // (code < FEATURE)
+        return str+1+3*aw+(DYNPD-FIFO_STATUS-1)+code;
+}
 
 

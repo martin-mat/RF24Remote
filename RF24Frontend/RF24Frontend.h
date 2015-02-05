@@ -9,6 +9,11 @@ class RF24Frontend: public RF24Remote
 private:
     RF24Com &com_device;
     uint8_t request_nr;
+    uint8_t registers[MAX_BUFF];
+protected:
+    int get_register_index(int code);
+    virtual uint8_t read_register(uint8_t reg, uint8_t* buf, uint8_t len);
+    virtual uint8_t read_register(uint8_t reg);
 public:
     RF24Frontend(RF24Com &_dev):com_device(_dev) {};
     int callRemote(ERF24Command cmd);

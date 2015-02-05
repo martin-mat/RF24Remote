@@ -106,6 +106,7 @@ public:
     int parse(int paramtype, const uint8_t *p);
     int store(int paramtype, uint8_t *p, uint8_t *ln);
     int executeCommand(void);
+    uint8_t dumpRegisters(uint8_t *str);
 
 protected:
     ERF24Command command;
@@ -116,6 +117,7 @@ protected:
     uint64_t p_uint64[2][MAX_PARAMS_TYPE];
     uint8_t p_buf[2][MAX_BUFF];
     uint8_t p_buf_ln[2];
+private:
 };
 
 #endif
