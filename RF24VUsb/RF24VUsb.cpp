@@ -245,7 +245,6 @@ bool RF24VUsb::txStandBy(uint32_t timeout, bool startTx)
 extern "C"{
 #endif
 /* ------------------------------------------------------------------------- */
-
 usbMsgLen_t usbFunctionSetup(uchar data[8])
 {
     usbRequest_t *rq = (usbRequest_t *)data;

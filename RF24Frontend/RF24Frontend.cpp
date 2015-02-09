@@ -95,6 +95,7 @@ void RF24Frontend::begin(void)
     request_nr = 0;
     com_device.initialize();
     callRemote(RF24_begin);
+    callRemote(RF24_printDetails);
 }
 
 void RF24Frontend::startListening(void)
@@ -149,107 +150,43 @@ uint8_t *RF24Frontend::get_register_pnt(uint8_t *str, int code)
 {
     uint8_t aw = str[SETUP_AW + 1];
 
-    if (code == 0)
+    if (code == -1)
         return str;
+    if (code == -2)
+        return str+1;
     else if (code <= RX_ADDR_P0)
-        return str+1+code;
+        return str+2+code;
     else if (code == RX_ADDR_P1)
-        return str+1+(aw-1)+code;
+        return str+2+(aw-1)+code;
     else if (code <= TX_ADDR)
-        return str+1+2*(aw-1)+code;
+        return str+2+2*(aw-1)+code;
     else if (code <= FIFO_STATUS)
-        return str+1+3*(aw-1)+code;
+        return str+2+3*(aw-1)+code;
     else // (code < FEATURE)
-        return str+1+3*aw+(DYNPD-FIFO_STATUS-1)+code;
+        return str+2+3*aw+(DYNPD-FIFO_STATUS-1)+code;
 }
 
 uint8_t RF24Frontend::read_register(uint8_t reg, uint8_t* buf, uint8_t len)
 {
     memcpy(buf, get_register_pnt((uint8_t *)p_buf[OPAR], reg), len);
+    return 0;
 }
 
 uint8_t RF24Frontend::read_register(uint8_t reg)
 {
-    return get_register_pnt((uint8_t *)p_buf[OPAR], reg); 
+    return *get_register_pnt((uint8_t *)p_buf[OPAR], reg); 
 }
+
+uint8_t RF24Frontend::get_status(void)
+{
+    return *get_register_pnt((uint8_t *)p_buf[OPAR], -1);
+}
+
 
 void RF24Frontend::printDetails(void)
 {
-    uint8_t *str;
-    uint8_t status;
-    uint8_t aw;
-    uint8_t i;
-    uint8_t dr;
-    rf24_datarate_e rate;
-
     callRemote(RF24_printDetails);
-    str = (uint8_t *)p_buf[OPAR];
-
-    status = str[0];
-    print_status(status);
-    
-
-
-    printf("STATUS\t\t = 0x%02x RX_DR=%x TX_DS=%x MAX_RT=%x RX_P_NO=%x TX_FULL=%x\r\n",
-           status,
-           (status & _BV(RX_DR))?1:0,
-           (status & _BV(TX_DS))?1:0,
-           (status & _BV(MAX_RT))?1:0,
-           ((status >> RX_P_NO) & 0b111),
-           (status & _BV(TX_FULL))?1:0
-          );
-    aw = str[SETUP_AW+1]+2;
-    printf("Addr width\t = %d\n", aw);
-    printf("RX_ADDR_P0-1\t = 0x");
-    for (i=aw; i > 0; i--)
-        printf("%02x", str[RX_ADDR_P0+i]);
-    printf(" 0x");
-    for (i=aw; i >0; i--)
-        printf("%02x", str[RX_ADDR_P1+i+aw-1]);
-    printf("\n");
-    printf("RX_ADDR_P2-5\t = ");
-    for (i=0; i<4; i++)
-        printf("0x%02x ", str[RX_ADDR_P2 + 2*(aw-1) + 1 + i]);
-    printf("\n");
-    printf("TX_ADDR\t\t = 0x");
-    for (i=aw; i > 0 ; i--)
-        printf("%02x", str[TX_ADDR + 2*(aw-1) + i]);
-    printf("\n");
-    printf("RX_PW_P0-6\t = ");
-    for (i=0; i<6; i++)
-        printf("0x%02x ", str[RX_PW_P0 + 3*(aw-1) + 1 + i]);
-    printf("\n");
-    printf("EN_AA\t\t = 0x%02x\n", str[EN_AA + 1]);
-    printf("EN_RXADDR\t = 0x%02x\n", str[EN_RXADDR + 1]);
-    printf("RF_CH\t\t = 0x%02x\n", str[RF_CH + 1]);
-    printf("RF_SETUP\t = 0x%02x\n", str[RF_SETUP + 1]);
-    printf("CONFIG\t = 0x%02x\n", str[CONFIG + 1]);
-    printf("DYNPD/FEATURE\t = 0x%02x 0x%02x\n", str[DYNPD + 1 + 3*(aw-1) + 4], str[FEATURE + 1 + 3*(aw-1) + 4]);
-    dr = str[RF_SETUP + 1]  & (_BV(RF_DR_LOW) | _BV(RF_DR_HIGH));
-    if ( dr == _BV(RF_DR_LOW) )
-    {
-        // '10' = 250KBPS
-        rate = RF24_250KBPS ;
-    }
-    else if ( dr == _BV(RF_DR_HIGH) )
-    {
-        // '01' = 2MBPS
-        rate = RF24_2MBPS ;
-    }
-    else
-    {
-        // '00' = 1MBPS
-        rate = RF24_1MBPS ;
-    }
-
-    printf("Data rate\t = %s\n", rf24_datarate_str[rate]);
-    /* TODO
-    printf("Model\t = ");
-    printf("CRC Length\t = ");
-    printf("Model\t = ");
-    printf("PA Power\t = ");
-    */
-    
+    RF24::printDetails();
 }
 
 bool RF24Frontend::available(uint8_t* pipe_num)
@@ -465,8 +402,9 @@ void RF24Frontend::enableDynamicPayloads(void)
 
 bool RF24Frontend::isPVariant(void) 
 {
-    callRemote(RF24_isPVariant);
-    return p_bool[OPAR][0];
+    return *get_register_pnt((uint8_t *)p_buf[OPAR], -2);
+    //callRemote(RF24_isPVariant);
+    //return p_bool[OPAR][0];
 }
 
 void RF24Frontend::setAutoAck(bool enable)

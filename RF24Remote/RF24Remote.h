@@ -2,7 +2,18 @@
 #define __RF24Remote_H
 
 #include "RF24.h"
-#include "RF24Remote_config.h"
+
+#ifdef _RF24_FW
+    #include "RF24Remote_config.h"
+#endif
+
+#ifndef RF24_DEVICE_CEPIN
+    #define RF24_DEVICE_CEPIN 0
+#endif
+
+#ifndef RF24_DEVICE_CSPIN
+    #define RF24_DEVICE_CSPIN 0
+#endif
 
 #if ((DEBUG!=0) && defined(_RF24_FRONTEND))
     #define DPRINT printf

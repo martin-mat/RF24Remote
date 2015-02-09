@@ -11,9 +11,10 @@ private:
     uint8_t request_nr;
     uint8_t registers[MAX_BUFF];
 protected:
-    int get_register_index(int code);
+    uint8_t *get_register_pnt(uint8_t *str, int code);
     virtual uint8_t read_register(uint8_t reg, uint8_t* buf, uint8_t len);
     virtual uint8_t read_register(uint8_t reg);
+    virtual uint8_t get_status(void);   
 public:
     RF24Frontend(RF24Com &_dev):com_device(_dev) {};
     int callRemote(ERF24Command cmd);

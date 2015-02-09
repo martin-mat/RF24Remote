@@ -8,6 +8,7 @@ class RF24ComVUsb: public RF24Com
 {
     private:
         usb_dev_handle *handle;
+        bool response_shortcut;
     public:
         RF24ComVUsb() {};
         virtual void initialize(void);

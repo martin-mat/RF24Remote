@@ -35,7 +35,7 @@
   #include <string.h>
   #include <sys/time.h>
   #include <stddef.h>
-  #include "RPi/bcm2835.h"
+//  #include "RPi/bcm2835.h"
 
   // GCC a Arduino Missing
   #define _BV(x) (1<<(x))

@@ -1,5 +1,6 @@
 #ifndef __RF24Serial__
 #define __RF24Serial__
+#define _RF24_FW
 #include "RF24Remote.h"
 
 class RF24Serial: public RF24Remote

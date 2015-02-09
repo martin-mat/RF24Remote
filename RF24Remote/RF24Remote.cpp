@@ -142,7 +142,7 @@ int RF24Remote::store(int paramtype, uint8_t *p, uint8_t *ln)
 
 int RF24Remote::executeCommand(void)
 {
-#ifndef _RF24_FRONTEND
+#ifdef _RF24_FW
     switch (command)
     {
         case RF24_begin: begin(); break;
@@ -211,6 +211,7 @@ uint8_t RF24Remote::dumpRegisters(uint8_t *str)
     uint8_t aw;
     uint8_t *begin=str;
     *str = get_status(); str++;
+    *str = (uint8_t)isPVariant(); str++;
     while (reg<=FEATURE) // FEATURE is the last register
     {
         // address registers read multiple bytes

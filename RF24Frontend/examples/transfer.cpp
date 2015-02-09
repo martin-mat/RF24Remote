@@ -18,9 +18,9 @@ TMRh20 2014
 #include <string>
 #include <time.h>
 #include <unistd.h>
-#include "RF24ComSerial.h"
-#include "RF24ComVUsb.h"
-#include "RF24Frontend.h"
+#include "RF24/RF24ComSerial.h"
+#include "RF24/RF24ComVUsb.h"
+#include "RF24/RF24Frontend.h"
 
 
 using namespace std;
