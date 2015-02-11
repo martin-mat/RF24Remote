@@ -5,17 +5,12 @@
 
 #ifdef _RF24_FW
     #include "RF24Remote_config.h"
-#endif
-
-#ifndef RF24_DEVICE_CEPIN
+#else
     #define RF24_DEVICE_CEPIN 0
-#endif
-
-#ifndef RF24_DEVICE_CSPIN
     #define RF24_DEVICE_CSPIN 0
 #endif
 
-#if ((DEBUG!=0) && defined(_RF24_FRONTEND))
+#if ((DEBUG!=0) && !defined(_RF24_FW))
     #define DPRINT printf
 #else
     #define DPRINT(...)
@@ -116,8 +111,6 @@ public:
     RF24Remote(void): RF24(RF24_DEVICE_CEPIN, RF24_DEVICE_CSPIN) {};
     int parse(int paramtype, const uint8_t *p);
     int store(int paramtype, uint8_t *p, uint8_t *ln);
-    int executeCommand(void);
-    uint8_t dumpRegisters(uint8_t *str);
 
 protected:
     ERF24Command command;

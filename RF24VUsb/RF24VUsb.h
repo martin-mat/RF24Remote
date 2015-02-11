@@ -2,9 +2,9 @@
 #define __RF24VUsb__
 
 #define _RF24_FW
-#include "RF24Remote.h"
+#include "RF24RemoteBackend.h"
 
-class RF24VUsb: public RF24Remote
+class RF24VUsb: public RF24RemoteBackend
 {
 private:
 public:

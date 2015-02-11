@@ -14,9 +14,9 @@
 #include <string>
 #include <time.h>
 #include <unistd.h>
-#include "RF24ComSerial.h"
-#include "RF24ComVUsb.h"
-#include "RF24Frontend.h"
+#include "RF24/RF24ComSerial.h"
+#include "RF24/RF24ComVUsb.h"
+#include "RF24/RF24Frontend.h"
 
 
 using namespace std;
@@ -24,10 +24,10 @@ using namespace std;
 // Hardware configuration
 //
 
-//RF24ComVUsb rf24_vusbdev;
-RF24ComSerial rf24_serialdev("/dev/ttyACM2");
-//RF24Frontend radio(rf24_vusbdev);
-RF24Frontend radio(rf24_serialdev);
+RF24ComVUsb rf24_vusbdev;
+//RF24ComSerial rf24_serialdev("/dev/ttyACM2");
+RF24Frontend radio(rf24_vusbdev);
+//RF24Frontend radio(rf24_serialdev);
 
 #undef millis
 unsigned long millis(void)

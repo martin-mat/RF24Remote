@@ -1,4 +1,5 @@
-#include "RF24Remote.h"
+#define _RF24_FW
+#include "RF24RemoteBackend.h"
 #include "nRF24L01.h"
 
 #ifdef __cplusplus

@@ -37,7 +37,7 @@ librf24frontend: RF24.o RF24Frontend.o RF24Remote.o RF24ComVUsb.o RF24ComSerial.
 	g++ -shared -Wl,-soname,$@.so.1 ${CCFLAGS} -o ${LIBNAME} $^
 	
 # Library parts
-RF24.o: ../../RF24/RF24.cpp
+RF24.o: ../RF24/RF24.cpp
 	g++ -Wall -fPIC ${CCFLAGS} -c $^
 
 RF24Frontend.o: RF24Frontend.cpp

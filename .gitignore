@@ -12,3 +12,10 @@ out/
 out_native/
 version.h
 Session.vim
+RF24Frontend/examples/pingpair_dyn
+RF24Frontend/examples/transfer
+RF24Frontend/librf24frontend.so.1.0
+RF24Serial/RF24Remote_config.h
+RF24VUsb/RF24Remote_config.h
+RF24VUsb/usbconfig.h
+
