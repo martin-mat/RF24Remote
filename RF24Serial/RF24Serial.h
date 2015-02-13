@@ -1,8 +1,8 @@
 #ifndef __RF24Serial__
 #define __RF24Serial__
-#include "RF24Remote.h"
+#include "RF24RemoteBackend.h"
 
-class RF24Serial: public RF24Remote
+class RF24Serial: public RF24RemoteBackend
 {
 private:
     HardwareSerial *serial;
