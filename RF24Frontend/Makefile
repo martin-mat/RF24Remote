@@ -23,7 +23,7 @@ LIBNAME=$(LIB).so.1.0
 HEADERS=RF24Com.h RF24ComVUsb.h RF24ComSerial.h RF24Frontend.h RF24_config.h ../RF24Remote/RF24Remote.h ../RF24/RF24.h 
 
 # Where to put the header files
-HEADER_DIR=${PREFIX}/include/RF24
+HEADER_DIR=${PREFIX}/include/RF24Remote
 
 # The recommended compiler flags for the Raspberry Pi
 CCFLAGS=-I. -I../RF24Remote -I../../RF24 -I../RF24VUsb

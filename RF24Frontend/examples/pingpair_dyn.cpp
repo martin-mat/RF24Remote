@@ -14,9 +14,9 @@
 #include <string>
 #include <time.h>
 #include <unistd.h>
-#include "RF24/RF24ComSerial.h"
-#include "RF24/RF24ComVUsb.h"
-#include "RF24/RF24Frontend.h"
+#include "RF24Remote/RF24ComSerial.h"
+#include "RF24Remote/RF24ComVUsb.h"
+#include "RF24Remote/RF24Frontend.h"
 
 
 using namespace std;
