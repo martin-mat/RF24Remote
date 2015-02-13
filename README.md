@@ -18,39 +18,39 @@ Components:
 
 Installation:
 1. Prepare a device which will drive nRF24l01 module, either via VUsb or Serial.
-- for Serial:
-- an Arduino board with nRF24l01 module attached, and connected via serial port to a frontend machine
-- for VUsb:
-- an Arduino board with nRF24l01 module attached, and with USB connected as [described in V-Usb project](http://vusb.wikidot.com/hardware)
-- one of [VUsb prototyping boards](http://vusb.wikidot.com/hardware) with nRF24l01 attached
-- nRF24L01 USB stick is in preparation as a part of this project
+* for Serial:
+* an Arduino board with nRF24l01 module attached, and connected via serial port to a frontend machine
+* for VUsb:
+* an Arduino board with nRF24l01 module attached, and with USB connected as [described in V-Usb project](http://vusb.wikidot.com/hardware)
+* one of [VUsb prototyping boards](http://vusb.wikidot.com/hardware) with nRF24l01 attached
+* nRF24L01 USB stick is in preparation as a part of this project
 
 2. Download and prepare Arduino libraries for backend
-- clone this repository or download as a package
-- in RF24VUsb,  edit Makefile.config and fill configuration parameters accordingly to your VUsb and nRF24l01 setup; execute ```make``` afterwards
-- in RF24Serial, exit Makefile.config and fill configuration parameters accordingly to your nRF24l01 connection; execute ```make``` afterwards
-- link or copy RF24Remote, RF24VUsb and RF24Serial into Arduino's library directory
-- in Arduino GUI, load example for RF24Serial (SerialDevice) or RF24VUsb (VUsbDevice)
-- compile, upload
+* clone this repository or download as a package
+* in RF24VUsb,  edit Makefile.config and fill configuration parameters accordingly to your VUsb and nRF24l01 setup; execute ```make``` afterwards
+* in RF24Serial, exit Makefile.config and fill configuration parameters accordingly to your nRF24l01 connection; execute ```make``` afterwards
+* link or copy RF24Remote, RF24VUsb and RF24Serial into Arduino's library directory
+* in Arduino GUI, load example for RF24Serial (SerialDevice) or RF24VUsb (VUsbDevice)
+* compile, upload
 
 3. Compile frontend libraries
-- enter RF24Frontend directory
-- ```make```
-- ```sudo make install```
+* enter RF24Frontend directory
+* ```make```
+* ```sudo make install```
 
 4. compile & run examples
-- enter RF24Frontend/examples directory
-- ```make```
-- run compiled examples
+* enter RF24Frontend/examples directory
+* ```make```
+* run compiled examples
 
 Usage of RF24Frontend libraries:
-- see example files:
-- instantiate one of RF24Frontend's communication drivers: RF24ComVUsb or RF24ComSerial
+* see example files:
+* instantiate one of RF24Frontend's communication drivers: RF24ComVUsb or RF24ComSerial
 ```
 RF24ComVUsb rf24_vusbdev;
 ```
-- instantiate RF24Frontend, give the communication driver as constructor's param
+* instantiate RF24Frontend, give the communication driver as constructor's param
 ```
 RF24Frontend radio(rf24_vusbdev);
 ```
-- use the RF24Frontend instance in any code where RF24 library is expected (RF24Frontend is inherited from RF24)
+* use the RF24Frontend instance in any code where RF24 library is expected (RF24Frontend is inherited from RF24)
