@@ -26,7 +26,7 @@ HEADERS=RF24Com.h RF24ComVUsb.h RF24ComSerial.h RF24Frontend.h RF24_config.h ../
 HEADER_DIR=${PREFIX}/include/RF24Remote
 
 # The recommended compiler flags for the Raspberry Pi
-CCFLAGS=-I. -I../RF24Remote -I../../RF24 -I../RF24VUsb
+CCFLAGS=-I. -I../RF24Remote -I../RF24 -I../RF24VUsb
 
 # make all
 # reinstall the library after each recompilation
