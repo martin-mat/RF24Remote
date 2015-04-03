@@ -814,17 +814,6 @@ T 45200 56000 5 10 0 0 0 0 1
 netname=Vcc
 }
 N 45400 55400 45400 56000 4
-C 51800 53500 1 0 0 regulator_negative_fixed.sym
-{
-T 52200 54400 5 10 1 1 0 0 1
-value=reg 3.3V
-T 51800 54400 5 10 1 1 0 0 1
-refdes=U7
-T 52000 54400 5 8 0 0 0 0 1
-footprint=SOT23
-T 52000 55700 5 8 0 0 0 0 1
-symversion=3.0
-}
 N 52500 52200 52500 53600 4
 C 52400 51900 1 0 0 gnd-1.sym
 {
@@ -850,7 +839,7 @@ refdes=C9
 T 56700 42800 5 10 0 0 90 0 1
 symversion=0.1
 T 57600 42600 5 10 0 0 0 0 1
-footprint=RADIAL_CAN 200
+footprint=0805
 }
 C 57200 44000 1 0 0 vcc-1.sym
 {
@@ -871,7 +860,7 @@ refdes=CONN8
 T 42900 52700 5 10 1 1 0 0 1
 value=USB A
 T 42900 52900 5 10 0 1 0 0 1
-footprint=USB_A
+footprint=usb-a-male-tht
 }
 C 60100 54900 1 0 0 led-2.sym
 {
@@ -914,4 +903,13 @@ N 58600 55000 59100 55000 4
 {
 T 58600 55000 5 10 0 1 0 0 1
 netname=BASE_LED1
+}
+C 51800 53500 1 0 0 Regulator_662K.sym
+{
+T 52300 54500 5 10 0 1 0 0 1
+device=662K
+T 52400 54300 5 10 1 1 0 0 1
+refdes=U7
+T 52700 54200 5 10 0 1 0 0 1
+footprint=SOT23
 }
